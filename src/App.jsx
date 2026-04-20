@@ -1,5 +1,6 @@
 import { useState } from "react";
 import './App.css';
+import ProfileBuilder from './ProfileBuilder';
 
 // ─── STATIC DATA ────────────────────────────────────────────
 const FEATURED_JOBS = [
@@ -124,8 +125,21 @@ const btnOutline = {
 };
 
 // ─── NAV ────────────────────────────────────────────────────
-function Nav({ onNav }) {
-  const [mobileOpen, setMobileOpen] = useState(false);
+function Nav({ page, setPage }) {
+  const navLink = (label, target) => (
+    <button key={label} onClick={() => setPage(target)} style={{
+      background: "none", border: "none", padding: 0,
+      fontSize: 13, fontWeight: 500,
+      color: page === target ? "var(--ink)" : "var(--ink-2)",
+      letterSpacing: "-0.01em", cursor: "pointer",
+      transition: "color 0.1s",
+    }}
+    onMouseEnter={e => e.currentTarget.style.color = "var(--ink)"}
+    onMouseLeave={e => e.currentTarget.style.color = page === target ? "var(--ink)" : "var(--ink-2)"}
+    >
+      {label}
+    </button>
+  );
 
   return (
     <nav style={{
@@ -138,30 +152,15 @@ function Nav({ onNav }) {
       <span style={{
         fontFamily: "var(--ff-display)", fontWeight: 700, fontSize: 20,
         letterSpacing: "-0.04em", lineHeight: 1, cursor: "pointer",
-      }} onClick={() => onNav("home")}>
+      }} onClick={() => setPage("home")}>
         Field<span style={{ color: "var(--federal)" }}>work</span>
       </span>
 
       <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
-        {[
-          { label: "Browse Jobs", section: "jobs" },
-          { label: "Move of the Week", section: "move" },
-          { label: "Build Profile", section: "profile" },
-        ].map(({ label, section }) => (
-          <button key={label} onClick={() => onNav(section)} style={{
-            background: "none", border: "none", padding: 0,
-            fontSize: 13, fontWeight: 500, color: "var(--ink-2)",
-            letterSpacing: "-0.01em", cursor: "pointer",
-            transition: "color 0.1s",
-          }}
-          onMouseEnter={e => e.target.style.color = "var(--ink)"}
-          onMouseLeave={e => e.target.style.color = "var(--ink-2)"}
-          >
-            {label}
-          </button>
-        ))}
+        {navLink("Browse Jobs", "jobs")}
+        {navLink("Build Profile", "profile")}
         <button
-          onClick={() => onNav("submit")}
+          onClick={() => setPage("home")}
           style={btnOutline}
           onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 var(--ink)"; }}
           onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "3px 3px 0 var(--ink)"; }}
@@ -169,7 +168,7 @@ function Nav({ onNav }) {
           Submit a company
         </button>
         <button
-          onClick={() => onNav("signup")}
+          onClick={() => setPage("home")}
           style={btnPrimary}
           onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 var(--federal)"; }}
           onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "3px 3px 0 var(--federal)"; }}
@@ -202,8 +201,6 @@ function Hero({ onNav }) {
         textTransform: "uppercase", color: "var(--ink-3)",
         marginBottom: 24, display: "flex", alignItems: "center", gap: 12,
       }}>
-        <span style={{ display: "inline-block", width: 20, height: 1.5, background: "var(--ink-3)" }} />
-        For people who work in tech
       </p>
 
       <h1 className="fade-up fade-up-1" style={{
@@ -218,7 +215,7 @@ function Hero({ onNav }) {
           fontFamily: "var(--ff-serif)", fontStyle: "italic",
           fontWeight: 400, letterSpacing: "-0.02em", color: "var(--federal)",
         }}>
-          Start acting<br />like it.
+          Start acting like it.
         </em>
       </h1>
 
@@ -557,309 +554,6 @@ function MoveOfWeek() {
   );
 }
 
-// ─── VALUE PROPS ─────────────────────────────────────────────
-function ValueProps() {
-  const items = [
-    {
-      num: "01", accent: "var(--federal)",
-      h: <>Work on something you'd <em style={{ fontFamily: "var(--ff-serif)", fontStyle: "italic", fontWeight: 400 }}>open on your own time</em></>,
-      p: "Every company here is built around something people actually love — not enterprise software, not B2B logistics.",
-    },
-    {
-      num: "02", accent: "var(--fluoro)",
-      h: <>Your skills transfer <em style={{ fontFamily: "var(--ff-serif)", fontStyle: "italic", fontWeight: 400 }}>more than you think</em></>,
-      p: "A senior PM, engineer, or designer can work almost anywhere. Most never realize it until it's too late.",
-    },
-    {
-      num: "03", accent: "var(--sun)",
-      h: <>Curated by a person, <em style={{ fontFamily: "var(--ff-serif)", fontStyle: "italic", fontWeight: 400 }}>not an algorithm</em></>,
-      p: "Every company on Fieldwork is hand-picked. If it's here, a human vouched for it.",
-    },
-  ];
-
-  return (
-    <section style={{ borderTop: "var(--stroke) solid var(--ink)", maxWidth: 1180, margin: "0 auto" }}>
-      <div style={{
-        display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
-        border: "var(--stroke) solid var(--ink)", margin: "0 48px",
-      }}>
-        {items.map((item, i) => (
-          <div key={i} style={{
-            padding: 32,
-            borderRight: i < 2 ? "var(--stroke) solid var(--ink)" : "none",
-            display: "flex", flexDirection: "column", gap: 12,
-            minHeight: 200, background: "var(--paper)",
-            position: "relative", overflow: "hidden",
-          }}>
-            <div aria-hidden style={{
-              position: "absolute", right: -30, bottom: -30,
-              width: 120, height: 120, borderRadius: "50%",
-              background: item.accent, mixBlendMode: "multiply", opacity: 0.5,
-              pointerEvents: "none",
-            }} />
-            <span style={{ fontFamily: "var(--ff-mono)", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--ink-3)" }}>
-              {item.num}
-            </span>
-            <h3 style={{ fontFamily: "var(--ff-display)", fontWeight: 700, fontSize: 20, letterSpacing: "-0.025em", lineHeight: 1.15, color: "var(--ink)", marginTop: 8 }}>
-              {item.h}
-            </h3>
-            <p style={{ fontSize: 14, lineHeight: 1.55, color: "var(--ink-2)" }}>{item.p}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-// ─── PROFILE BUILDER ─────────────────────────────────────────
-function ProfileBuilder() {
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState({
-    name: "", title: "", company: "", bio: "",
-    interests: [], openTo: "",
-  });
-  const [submitted, setSubmitted] = useState(false);
-
-  const INTERESTS = ["Music", "Gaming", "Food & Drink", "Fitness", "Art & Design", "Sports", "Outdoors", "Sustainability", "Books & Media", "Film", "Fashion", "Travel"];
-  const INTEREST_COLORS = { Music: "#e35598", Gaming: "#2750b6", "Food & Drink": "#eabc2b", Fitness: "#e8632c", "Art & Design": "#e35598", Sports: "#e8632c", Outdoors: "#3a8a47", Sustainability: "#3a8a47", "Books & Media": "#eabc2b", Film: "#2750b6", Fashion: "#e35598", Travel: "#3a8a47" };
-
-  const steps = ["About you", "Your interests", "Where you're headed"];
-
-  const inputStyle = {
-    width: "100%", padding: "11px 14px",
-    border: "var(--stroke) solid var(--ink)",
-    background: "var(--paper)", fontFamily: "var(--ff-body)",
-    fontSize: 14, color: "var(--ink)", outline: "none",
-    borderRadius: 0, transition: "box-shadow 0.1s",
-  };
-
-  const labelStyle = {
-    fontFamily: "var(--ff-mono)", fontSize: 10, fontWeight: 500,
-    color: "var(--ink-3)", letterSpacing: "0.14em", textTransform: "uppercase",
-    display: "block", marginBottom: 6, marginTop: 20,
-  };
-
-  const toggleInterest = (interest) => {
-    setForm(f => ({
-      ...f,
-      interests: f.interests.includes(interest)
-        ? f.interests.filter(i => i !== interest)
-        : [...f.interests, interest],
-    }));
-  };
-
-  if (submitted) {
-    return (
-      <section id="profile" style={{ borderTop: "var(--stroke) solid var(--ink)", padding: "64px 48px", maxWidth: 1180, margin: "0 auto" }}>
-        <div style={{ maxWidth: 560, margin: "0 auto", textAlign: "center" }}>
-          <div style={{ fontSize: 48, marginBottom: 24 }}>✦</div>
-          <h2 style={{ fontFamily: "var(--ff-display)", fontWeight: 700, fontSize: 28, letterSpacing: "-0.03em", marginBottom: 12 }}>
-            Profile saved.
-          </h2>
-          <p style={{ fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 18, color: "var(--ink-2)", lineHeight: 1.4 }}>
-            We'll reach out when companies matching your interests start browsing.
-          </p>
-          <button style={{ ...btnPrimary, marginTop: 32 }} onClick={() => { setSubmitted(false); setStep(0); setForm({ name: "", title: "", company: "", bio: "", interests: [], openTo: "" }); }}>
-            Edit profile
-          </button>
-        </div>
-      </section>
-    );
-  }
-
-  return (
-    <section id="profile" style={{ borderTop: "var(--stroke) solid var(--ink)", padding: "64px 48px", maxWidth: 1180, margin: "0 auto" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "start" }}>
-
-        {/* left — copy */}
-        <div>
-          <p style={{ fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--ink-3)", marginBottom: 16 }}>
-            Profile Builder
-          </p>
-          <h2 style={{ fontFamily: "var(--ff-display)", fontWeight: 700, fontSize: 36, letterSpacing: "-0.03em", lineHeight: 1.05, marginBottom: 16 }}>
-            The profile your{" "}
-            <em style={{ fontFamily: "var(--ff-serif)", fontStyle: "italic", fontWeight: 400, color: "var(--federal)" }}>
-              résumé can't show
-            </em>
-          </h2>
-          <p style={{ fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 18, lineHeight: 1.5, color: "var(--ink-2)", marginBottom: 40 }}>
-            What do you build? What are you into? Where do you actually want to go?
-            Tell us — and let the right companies find you.
-          </p>
-
-          {/* feature list */}
-          {[
-            { label: "What you build", desc: "Your stack, your craft, your experience level" },
-            { label: "What you're into", desc: "The interests that should shape where you work" },
-            { label: "Where you want to go", desc: "Your next move, in your own words" },
-          ].map(({ label, desc }) => (
-            <div key={label} style={{ display: "flex", gap: 16, marginBottom: 20 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--federal)", marginTop: 6, flexShrink: 0 }} />
-              <div>
-                <div style={{ fontFamily: "var(--ff-display)", fontWeight: 600, fontSize: 14, letterSpacing: "-0.01em" }}>{label}</div>
-                <div style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 2 }}>{desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* right — form */}
-        <div>
-          {/* stepper */}
-          <div style={{ display: "flex", gap: 0, marginBottom: 32, border: "var(--stroke) solid var(--ink)" }}>
-            {steps.map((s, i) => (
-              <button key={s} onClick={() => i <= step && setStep(i)} style={{
-                flex: 1, padding: "10px 4px", border: "none",
-                borderRight: i < 2 ? "var(--stroke) solid var(--ink)" : "none",
-                background: i === step ? "var(--ink)" : i < step ? "var(--paper-2)" : "var(--paper)",
-                color: i === step ? "var(--paper)" : "var(--ink-3)",
-                fontFamily: "var(--ff-mono)", fontSize: 9, letterSpacing: "0.1em",
-                textTransform: "uppercase", cursor: i <= step ? "pointer" : "default",
-                transition: "background 0.15s, color 0.15s",
-              }}>
-                {i < step ? "✓ " : `${i + 1}. `}{s}
-              </button>
-            ))}
-          </div>
-
-          {/* step 0 */}
-          {step === 0 && (
-            <div>
-              <label style={labelStyle}>Full name</label>
-              <input style={inputStyle} placeholder="Alex Rivera" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                onFocus={e => e.target.style.boxShadow = "3px 3px 0 var(--federal)"}
-                onBlur={e => e.target.style.boxShadow = "none"}
-              />
-              <label style={labelStyle}>Current title</label>
-              <input style={inputStyle} placeholder="Senior Software Engineer" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                onFocus={e => e.target.style.boxShadow = "3px 3px 0 var(--federal)"}
-                onBlur={e => e.target.style.boxShadow = "none"}
-              />
-              <label style={labelStyle}>Current company</label>
-              <input style={inputStyle} placeholder="Boring Corp Inc." value={form.company} onChange={e => setForm(f => ({ ...f, company: e.target.value }))}
-                onFocus={e => e.target.style.boxShadow = "3px 3px 0 var(--federal)"}
-                onBlur={e => e.target.style.boxShadow = "none"}
-              />
-              <label style={labelStyle}>One-line bio</label>
-              <textarea style={{ ...inputStyle, height: 88, resize: "vertical" }} placeholder="I build iOS apps and spend my weekends on a road bike." value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
-                onFocus={e => e.target.style.boxShadow = "3px 3px 0 var(--federal)"}
-                onBlur={e => e.target.style.boxShadow = "none"}
-              />
-            </div>
-          )}
-
-          {/* step 1 */}
-          {step === 1 && (
-            <div>
-              <p style={{ fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 15, color: "var(--ink-2)", marginBottom: 20 }}>
-                Pick the interests that should shape where you work. Select as many as you want.
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {INTERESTS.map(interest => {
-                  const isActive = form.interests.includes(interest);
-                  const color = INTEREST_COLORS[interest];
-                  return (
-                    <button key={interest} onClick={() => toggleInterest(interest)} style={{
-                      display: "inline-flex", alignItems: "center", gap: 8,
-                      padding: "7px 16px 7px 8px",
-                      background: isActive ? "var(--ink)" : "var(--paper)",
-                      border: "var(--stroke) solid var(--ink)",
-                      borderRadius: 999,
-                      fontFamily: "var(--ff-display)", fontWeight: 600, fontSize: 13,
-                      letterSpacing: "-0.01em",
-                      color: isActive ? "var(--paper)" : "var(--ink)",
-                      cursor: "pointer",
-                      transition: "background 0.1s, color 0.1s, transform 0.08s",
-                    }}
-                    onMouseEnter={e => !isActive && (e.currentTarget.style.transform = "translateY(-1px)")}
-                    onMouseLeave={e => (e.currentTarget.style.transform = "")}
-                    >
-                      <span style={{ width: 18, height: 18, borderRadius: "50%", border: `1.5px solid ${isActive ? "var(--paper)" : color}`, background: isActive ? "transparent" : color, flexShrink: 0, opacity: 0.9 }} />
-                      {interest}
-                    </button>
-                  );
-                })}
-              </div>
-              {form.interests.length > 0 && (
-                <p style={{ marginTop: 16, fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-3)" }}>
-                  {form.interests.length} selected: {form.interests.join(", ")}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* step 2 */}
-          {step === 2 && (
-            <div>
-              <label style={labelStyle}>What kind of move are you looking for?</label>
-              <div style={{ display: "flex", flexDirection: "column", gap: 0, marginBottom: 20 }}>
-                {[
-                  { val: "active", label: "Actively looking", desc: "Ready to interview now" },
-                  { val: "passive", label: "Open to the right thing", desc: "Not rushing, but interested" },
-                  { val: "exploring", label: "Just exploring", desc: "Curious what's out there" },
-                ].map(({ val, label, desc }) => (
-                  <button key={val} onClick={() => setForm(f => ({ ...f, openTo: val }))} style={{
-                    display: "flex", alignItems: "center", gap: 16,
-                    padding: "14px 16px",
-                    border: "var(--stroke) solid var(--ink)",
-                    borderBottom: "none",
-                    background: form.openTo === val ? "var(--ink)" : "var(--paper)",
-                    color: form.openTo === val ? "var(--paper)" : "var(--ink)",
-                    cursor: "pointer", textAlign: "left",
-                    transition: "background 0.1s, color 0.1s",
-                  }}>
-                    <div style={{ width: 16, height: 16, borderRadius: "50%", border: `1.5px solid ${form.openTo === val ? "var(--paper)" : "var(--ink)"}`, background: form.openTo === val ? "var(--paper)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      {form.openTo === val && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--ink)" }} />}
-                    </div>
-                    <div>
-                      <div style={{ fontFamily: "var(--ff-display)", fontWeight: 600, fontSize: 14 }}>{label}</div>
-                      <div style={{ fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 13, opacity: 0.6, marginTop: 1 }}>{desc}</div>
-                    </div>
-                  </button>
-                ))}
-                <div style={{ border: "var(--stroke) solid var(--ink)", height: 0 }} />
-              </div>
-              <label style={labelStyle}>Describe your ideal next role (optional)</label>
-              <textarea style={{ ...inputStyle, height: 120, resize: "vertical" }}
-                placeholder="I want to work at a smaller company where I can see the impact of what I ship. Ideally something in music, sports, or fitness."
-                onFocus={e => e.target.style.boxShadow = "3px 3px 0 var(--federal)"}
-                onBlur={e => e.target.style.boxShadow = "none"}
-              />
-            </div>
-          )}
-
-          {/* nav buttons */}
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 32, gap: 12 }}>
-            {step > 0 ? (
-              <button style={btnOutline} onClick={() => setStep(s => s - 1)}
-                onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 var(--ink)"; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "3px 3px 0 var(--ink)"; }}
-              >
-                Back
-              </button>
-            ) : <div />}
-            {step < 2 ? (
-              <button style={btnPrimary} onClick={() => setStep(s => s + 1)}
-                onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 var(--federal)"; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "3px 3px 0 var(--federal)"; }}
-              >
-                Next <ArrowRight />
-              </button>
-            ) : (
-              <button style={btnPrimary} onClick={() => setSubmitted(true)}
-                onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 var(--federal)"; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "3px 3px 0 var(--federal)"; }}
-              >
-                Save profile ✦
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ─── EMAIL SIGNUP ────────────────────────────────────────────
 function EmailSignup() {
   const [email, setEmail] = useState("");
@@ -1103,25 +797,22 @@ function Footer() {
 
 // ─── APP ─────────────────────────────────────────────────────
 export default function App() {
-  const handleNav = (section) => {
-    if (section === "home") { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
-    const el = document.getElementById(section);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+  const [page, setPage] = useState("home");
+
+  if (page === "profile") return <ProfileBuilder onBack={() => setPage("home")} />;
 
   return (
-    <>
-      <div style={{ minHeight: "100vh", background: "var(--paper)" }}>
-        <Nav onNav={handleNav} />
-        <Hero onNav={handleNav} />
-        <FeaturedJobs />
-        <MoveOfWeek />
-        <ValueProps />
-        <ProfileBuilder />
-        <EmailSignup />
-        <SubmitCompany />
-        <Footer />
-      </div>
-    </>
+    <div style={{ minHeight: "100vh", background: "var(--paper)" }}>
+      <Nav page={page} setPage={setPage} />
+      {page === "home" && (
+        <>
+          <Hero onNav={setPage} />
+          <EmailSignup />
+          <SubmitCompany />
+        </>
+      )}
+      {page === "jobs" && <FeaturedJobs />}
+      <Footer />
+    </div>
   );
 }
