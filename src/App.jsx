@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import AuthModal from './AuthModal'
+import ProfileBuilder from './ProfileBuilder'
 import './App.css'
 
 const ALL_INTERESTS = [
@@ -27,6 +28,7 @@ const INTEREST_COLORS = {
 const CARD_TOP_COLORS = ['#eabc2b', '#f4ece0', '#e35598', '#eabc2b', '#f4ece0', '#eabc2b']
 
 export default function App() {
+  const [page, setPage] = useState('home')
   const [user, setUser] = useState(null)
   const [showAuth, setShowAuth] = useState(false)
   const [jobs, setJobs] = useState([])
@@ -95,6 +97,10 @@ export default function App() {
 
   const signOut = () => supabase.auth.signOut()
 
+  if (page === 'profile-builder') {
+    return <ProfileBuilder onBack={() => setPage('home')} />
+  }
+
   return (
     <div className="page">
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
@@ -103,6 +109,7 @@ export default function App() {
         <span className="logo">Linked<span className="logo-accent">Interests</span></span>
         <div className="nav-links">
           <a href="#">Browse Jobs</a>
+          <a href="#" onClick={e => { e.preventDefault(); setPage('profile-builder') }}>Build Profile</a>
           <a href="#">For Companies</a>
           {user ? (
             <>
@@ -117,7 +124,7 @@ export default function App() {
           ) : (
             <>
               <button className="btn-outline" onClick={() => setShowAuth(true)}>Sign in</button>
-              <button className="btn-primary" onClick={() => setShowAuth(true)}>Get Started</button>
+              <button className="btn-primary" onClick={() => setPage('profile-builder')}>Get Started</button>
             </>
           )}
         </div>
