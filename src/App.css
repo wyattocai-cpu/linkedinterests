@@ -353,3 +353,64 @@ body {
 .footer-links a:hover {
   color: #4f46e5;
 }
+
+/* Mobile */
+@media (max-width: 640px) {
+  .nav {
+    padding: 0.75rem 1rem;
+  }
+
+  .nav-links a {
+    display: none;
+  }
+
+  .hero {
+    padding: 3rem 1.25rem 2.5rem;
+  }
+
+  .hero-sub {
+    font-size: 1rem;
+  }
+
+  .search-bar {
+    flex-direction: column;
+  }
+
+  .search-bar input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .section {
+    padding: 2.5rem 1.25rem;
+  }
+
+  .section h2 {
+    font-size: 1.35rem;
+  }
+
+  .job-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .value-prop {
+    grid-template-columns: 1fr;
+    padding: 2rem 1.25rem;
+    margin: 0 1.25rem 2rem;
+  }
+
+  .cta-section {
+    padding: 3.5rem 1.25rem;
+  }
+
+  .cta-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
+    padding: 1.25rem 1rem;
+  }
+}
