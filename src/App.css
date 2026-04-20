@@ -5,9 +5,10 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #1a1a2e;
-  background: #fff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #111;
+  background: #fafaf8;
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {
@@ -25,308 +26,346 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 2rem;
-  border-bottom: 1px solid #eee;
+  padding: 1.25rem 2.5rem;
+  border-bottom: 1px solid #e8e6e0;
   position: sticky;
   top: 0;
-  background: #fff;
+  background: rgba(250, 250, 248, 0.92);
+  backdrop-filter: blur(8px);
   z-index: 10;
 }
 
 .logo {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #4f46e5;
-  letter-spacing: -0.5px;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: #111;
+  letter-spacing: 0;
 }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .nav-links a {
   text-decoration: none;
-  color: #444;
-  font-size: 0.95rem;
+  color: #555;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
+  transition: color 0.15s;
 }
 
 .nav-links a:hover {
-  color: #4f46e5;
+  color: #111;
 }
 
 .nav-user {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
-  color: #444;
+  font-size: 0.875rem;
+  color: #555;
 }
 
 .nav-avatar {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 /* Buttons */
 .btn-primary {
-  background: #4f46e5;
-  color: #fff;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  font-size: 0.95rem;
+  background: #111;
+  color: #fafaf8;
+  border: 1px solid #111;
+  padding: 0.6rem 1.3rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-family: 'Inter', sans-serif;
   cursor: pointer;
   font-weight: 500;
-  transition: background 0.15s;
+  letter-spacing: 0.01em;
+  transition: background 0.15s, color 0.15s;
 }
 
 .btn-primary:hover {
-  background: #4338ca;
+  background: #333;
+  border-color: #333;
 }
 
 .btn-outline {
   background: transparent;
-  color: #4f46e5;
-  border: 1.5px solid #4f46e5;
-  padding: 0.55rem 1.1rem;
-  border-radius: 8px;
-  font-size: 0.95rem;
+  color: #111;
+  border: 1px solid #ccc;
+  padding: 0.6rem 1.3rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-family: 'Inter', sans-serif;
   cursor: pointer;
   font-weight: 500;
-  transition: all 0.15s;
+  letter-spacing: 0.01em;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .btn-outline:hover {
-  background: #eef2ff;
+  border-color: #111;
+  background: #f4f4f0;
 }
 
 .btn-sm {
   padding: 0.4rem 0.9rem;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .btn-lg {
-  padding: 0.85rem 2rem;
-  font-size: 1.05rem;
+  padding: 0.85rem 2.25rem;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
 }
 
 /* Hero */
 .hero {
-  background: linear-gradient(135deg, #eef2ff 0%, #fdf4ff 100%);
-  padding: 5rem 2rem 4rem;
-  text-align: center;
+  padding: 6rem 2.5rem 5rem;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 .hero h1 {
-  font-size: clamp(2rem, 5vw, 3.25rem);
-  font-weight: 800;
-  line-height: 1.2;
-  max-width: 700px;
-  margin: 0 auto 1.25rem;
-  color: #1a1a2e;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(2.5rem, 5.5vw, 4rem);
+  font-weight: 400;
+  line-height: 1.15;
+  max-width: 720px;
+  color: #111;
+  margin-bottom: 1.5rem;
 }
 
 .hero h1 em {
-  font-style: normal;
-  color: #4f46e5;
+  font-style: italic;
+  color: #111;
 }
 
 .hero-sub {
-  color: #555;
-  font-size: 1.1rem;
-  max-width: 540px;
-  margin: 0 auto 2.5rem;
-  line-height: 1.6;
+  color: #666;
+  font-size: 1.05rem;
+  max-width: 520px;
+  margin-bottom: 2.75rem;
+  line-height: 1.65;
 }
 
 .search-bar {
   display: flex;
-  gap: 0.75rem;
-  max-width: 700px;
-  margin: 0 auto;
-  flex-wrap: wrap;
-  justify-content: center;
+  gap: 0.5rem;
+  max-width: 680px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.4rem 0.4rem 0.4rem 0;
 }
 
 .search-bar input {
   flex: 1;
-  min-width: 200px;
-  padding: 0.7rem 1rem;
-  border: 1.5px solid #ddd;
-  border-radius: 8px;
-  font-size: 0.95rem;
+  padding: 0.6rem 1rem;
+  border: none;
+  background: transparent;
+  font-size: 0.9rem;
+  font-family: 'Inter', sans-serif;
+  color: #111;
   outline: none;
-  transition: border-color 0.15s;
 }
 
-.search-bar input:focus {
-  border-color: #4f46e5;
+.search-bar input::placeholder {
+  color: #aaa;
+}
+
+.search-divider {
+  width: 1px;
+  background: #e8e6e0;
+  margin: 0.4rem 0;
+}
+
+.search-bar .btn-primary {
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* Sections */
 .section {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 4rem 2rem;
+  padding: 4rem 2.5rem;
+  border-top: 1px solid #e8e6e0;
 }
 
 .section h2 {
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin-bottom: 1.75rem;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 400;
+  margin-bottom: 2rem;
+  color: #111;
 }
 
 /* Categories */
 .categories {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.6rem;
 }
 
 .category-pill {
-  background: #f5f5f5;
-  border: 1.5px solid #e0e0e0;
-  border-radius: 999px;
-  padding: 0.5rem 1.1rem;
-  font-size: 0.95rem;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 2px;
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+  font-family: 'Inter', sans-serif;
   cursor: pointer;
   transition: all 0.15s;
-  color: #333;
+  color: #444;
+  letter-spacing: 0.01em;
 }
 
 .category-pill:hover {
-  background: #eef2ff;
-  border-color: #4f46e5;
-  color: #4f46e5;
+  background: #111;
+  border-color: #111;
+  color: #fafaf8;
 }
 
 /* Job cards */
 .job-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.25rem;
+  gap: 1px;
+  border: 1px solid #e8e6e0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #e8e6e0;
 }
 
 .job-card {
-  border: 1.5px solid #e8e8e8;
-  border-radius: 12px;
-  padding: 1.5rem;
+  background: #fff;
+  padding: 1.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  transition: box-shadow 0.15s, border-color 0.15s;
+  gap: 0.65rem;
+  transition: background 0.15s;
 }
 
 .job-card:hover {
-  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.1);
-  border-color: #c7d2fe;
+  background: #fafaf8;
 }
 
 .job-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .job-company {
-  font-weight: 700;
-  font-size: 1rem;
-  color: #1a1a2e;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #111;
 }
 
 .job-role {
-  color: #444;
-  font-size: 0.95rem;
-  margin-top: 0.1rem;
+  color: #555;
+  font-size: 0.9rem;
+  margin-top: 0.2rem;
 }
 
 .job-tag {
-  font-size: 0.78rem;
-  padding: 0.25rem 0.65rem;
-  border-radius: 999px;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 2px;
   white-space: nowrap;
   font-weight: 500;
   flex-shrink: 0;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .job-location {
-  font-size: 0.85rem;
-  color: #888;
+  font-size: 0.8rem;
+  color: #999;
+  letter-spacing: 0.01em;
 }
 
 .job-desc {
-  font-size: 0.9rem;
-  color: #555;
-  line-height: 1.5;
+  font-size: 0.875rem;
+  color: #666;
+  line-height: 1.6;
   flex: 1;
 }
 
 /* Value prop */
 .value-prop {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 2rem;
-  background: #fafafa;
-  border-radius: 16px;
-  padding: 3rem 2rem;
-  max-width: 1100px;
-  margin: 0 auto 2rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3rem;
 }
 
 .value-item {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
-.value-icon {
-  font-size: 2rem;
-  display: block;
-  margin-bottom: 0.75rem;
+.value-num {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 0.85rem;
+  color: #aaa;
+  font-style: italic;
 }
 
 .value-item h3 {
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111;
 }
 
 .value-item p {
-  font-size: 0.92rem;
-  color: #666;
-  line-height: 1.6;
+  font-size: 0.875rem;
+  color: #777;
+  line-height: 1.65;
 }
 
 /* CTA */
 .cta-section {
+  background: #111;
+  color: #fafaf8;
   text-align: center;
-  padding: 5rem 2rem;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  color: #fff;
+  padding: 6rem 2.5rem;
 }
 
 .cta-section h2 {
-  font-size: 2rem;
-  font-weight: 800;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+  font-weight: 400;
   margin-bottom: 0.75rem;
 }
 
 .cta-section p {
-  font-size: 1.05rem;
-  opacity: 0.85;
-  margin-bottom: 2rem;
+  font-size: 1rem;
+  color: #aaa;
+  margin-bottom: 2.5rem;
 }
 
 .cta-section .btn-primary {
-  background: #fff;
-  color: #4f46e5;
+  background: #fafaf8;
+  color: #111;
+  border-color: #fafaf8;
 }
 
 .cta-section .btn-primary:hover {
-  background: #eef2ff;
+  background: #e8e6e0;
+  border-color: #e8e6e0;
 }
 
 /* Footer */
@@ -334,30 +373,31 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 2rem;
-  border-top: 1px solid #eee;
-  font-size: 0.875rem;
-  color: #888;
+  padding: 1.5rem 2.5rem;
+  border-top: 1px solid #e8e6e0;
+  font-size: 0.8rem;
+  color: #aaa;
 }
 
 .footer-links {
   display: flex;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .footer-links a {
   text-decoration: none;
-  color: #888;
+  color: #aaa;
+  transition: color 0.15s;
 }
 
 .footer-links a:hover {
-  color: #4f46e5;
+  color: #111;
 }
 
 /* Mobile */
 @media (max-width: 640px) {
   .nav {
-    padding: 0.75rem 1rem;
+    padding: 1rem 1.25rem;
   }
 
   .nav-links a {
@@ -365,28 +405,40 @@ body {
   }
 
   .hero {
-    padding: 3rem 1.25rem 2.5rem;
+    padding: 3.5rem 1.25rem 3rem;
   }
 
   .hero-sub {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
   .search-bar {
     flex-direction: column;
+    padding: 0.5rem;
+    gap: 0;
+  }
+
+  .search-divider {
+    display: none;
   }
 
   .search-bar input {
-    min-width: 0;
     width: 100%;
   }
 
+  .search-bar .btn-primary {
+    width: 100%;
+    text-align: center;
+    border-radius: 4px;
+    margin-top: 0.25rem;
+  }
+
   .section {
-    padding: 2.5rem 1.25rem;
+    padding: 2.75rem 1.25rem;
   }
 
   .section h2 {
-    font-size: 1.35rem;
+    font-size: 1.5rem;
   }
 
   .job-grid {
@@ -395,22 +447,17 @@ body {
 
   .value-prop {
     grid-template-columns: 1fr;
-    padding: 2rem 1.25rem;
-    margin: 0 1.25rem 2rem;
+    gap: 2rem;
   }
 
   .cta-section {
-    padding: 3.5rem 1.25rem;
-  }
-
-  .cta-section h2 {
-    font-size: 1.5rem;
+    padding: 4rem 1.25rem;
   }
 
   .footer {
     flex-direction: column;
     gap: 0.75rem;
     text-align: center;
-    padding: 1.25rem 1rem;
+    padding: 1.25rem;
   }
 }

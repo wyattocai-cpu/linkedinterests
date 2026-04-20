@@ -4,14 +4,8 @@ import AuthModal from './AuthModal'
 import './App.css'
 
 const categories = [
-  { icon: '🎸', label: 'Music' },
-  { icon: '🏕️', label: 'Outdoors' },
-  { icon: '🎮', label: 'Gaming' },
-  { icon: '🍳', label: 'Food & Drink' },
-  { icon: '🎨', label: 'Art & Design' },
-  { icon: '⚽', label: 'Sports' },
-  { icon: '📚', label: 'Books & Media' },
-  { icon: '🐾', label: 'Animals' },
+  'Music', 'Outdoors', 'Gaming', 'Food & Drink',
+  'Art & Design', 'Sports', 'Books & Media', 'Animals',
 ]
 
 const jobs = [
@@ -19,32 +13,28 @@ const jobs = [
     company: 'Patagonia',
     role: 'Senior Software Engineer',
     location: 'Ventura, CA',
-    tag: '🏕️ Outdoors',
-    tagColor: '#e8f5e9',
+    tag: 'Outdoors',
     desc: 'Build tools that power our sustainable supply chain and e-commerce platform.',
   },
   {
     company: 'Spotify',
     role: 'Data Analyst',
     location: 'Remote',
-    tag: '🎸 Music',
-    tagColor: '#fce4ec',
+    tag: 'Music',
     desc: 'Turn listener data into insights that shape how people discover music.',
   },
   {
     company: 'AllTrails',
     role: 'Product Manager',
     location: 'San Francisco, CA',
-    tag: '🏕️ Outdoors',
-    tagColor: '#e8f5e9',
+    tag: 'Outdoors',
     desc: 'Define the roadmap for features used by 50M hikers and explorers worldwide.',
   },
   {
     company: 'Duolingo',
     role: 'UX Researcher',
     location: 'Pittsburgh, PA',
-    tag: '📚 Books & Media',
-    tagColor: '#e3f2fd',
+    tag: 'Books & Media',
     desc: 'Help millions of learners stay motivated with research-backed product decisions.',
   },
 ]
@@ -99,18 +89,19 @@ export default function App() {
           Trade a bit of prestige for a lot of purpose.
         </p>
         <div className="search-bar">
-          <input type="text" placeholder="Job title or skill (e.g. Software Engineer)" />
+          <input type="text" placeholder="Job title or skill" />
+          <div className="search-divider" />
           <input type="text" placeholder="Interest (e.g. Climbing, Coffee, Gaming)" />
-          <button className="btn-primary">Search Jobs</button>
+          <button className="btn-primary">Search</button>
         </div>
       </section>
 
       <section className="section">
         <h2>Browse by interest</h2>
         <div className="categories">
-          {categories.map(({ icon, label }) => (
+          {categories.map((label) => (
             <button key={label} className="category-pill">
-              {icon} {label}
+              {label}
             </button>
           ))}
         </div>
@@ -126,9 +117,7 @@ export default function App() {
                   <div className="job-company">{job.company}</div>
                   <div className="job-role">{job.role}</div>
                 </div>
-                <span className="job-tag" style={{ background: job.tagColor }}>
-                  {job.tag}
-                </span>
+                <span className="job-tag">{job.tag}</span>
               </div>
               <div className="job-location">{job.location}</div>
               <p className="job-desc">{job.desc}</p>
@@ -140,17 +129,17 @@ export default function App() {
 
       <section className="section value-prop">
         <div className="value-item">
-          <span className="value-icon">🎯</span>
+          <span className="value-num">01</span>
           <h3>Match on what matters</h3>
           <p>Filter by the interests and values that make work feel less like work.</p>
         </div>
         <div className="value-item">
-          <span className="value-icon">🏢</span>
+          <span className="value-num">02</span>
           <h3>Mission-driven companies</h3>
           <p>Every company here is built around a community, hobby, or passion — not just profit.</p>
         </div>
         <div className="value-item">
-          <span className="value-icon">💼</span>
+          <span className="value-num">03</span>
           <h3>Your skills still matter</h3>
           <p>We match your existing experience to roles where it translates — no career pivot required.</p>
         </div>
