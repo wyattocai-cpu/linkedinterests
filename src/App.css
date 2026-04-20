@@ -229,7 +229,8 @@ body {
   letter-spacing: 0.01em;
 }
 
-.category-pill:hover {
+.category-pill:hover,
+.category-pill.active {
   background: #111;
   border-color: #111;
   color: #fafaf8;
@@ -297,11 +298,21 @@ body {
   letter-spacing: 0.01em;
 }
 
-.job-desc {
-  font-size: 0.875rem;
-  color: #666;
-  line-height: 1.6;
-  flex: 1;
+.job-dept {
+  font-size: 0.8rem;
+  color: #aaa;
+  letter-spacing: 0.01em;
+}
+
+.jobs-empty {
+  color: #aaa;
+  font-size: 0.9rem;
+  padding: 2rem 0;
+}
+
+a.job-card {
+  text-decoration: none;
+  cursor: pointer;
 }
 
 /* Value prop */

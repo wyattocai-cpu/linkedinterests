@@ -3,45 +3,20 @@ import { supabase } from './supabase'
 import AuthModal from './AuthModal'
 import './App.css'
 
-const categories = [
+const ALL_INTERESTS = [
   'Music', 'Outdoors', 'Gaming', 'Food & Drink',
-  'Art & Design', 'Sports', 'Books & Media', 'Animals',
-]
-
-const jobs = [
-  {
-    company: 'Patagonia',
-    role: 'Senior Software Engineer',
-    location: 'Ventura, CA',
-    tag: 'Outdoors',
-    desc: 'Build tools that power our sustainable supply chain and e-commerce platform.',
-  },
-  {
-    company: 'Spotify',
-    role: 'Data Analyst',
-    location: 'Remote',
-    tag: 'Music',
-    desc: 'Turn listener data into insights that shape how people discover music.',
-  },
-  {
-    company: 'AllTrails',
-    role: 'Product Manager',
-    location: 'San Francisco, CA',
-    tag: 'Outdoors',
-    desc: 'Define the roadmap for features used by 50M hikers and explorers worldwide.',
-  },
-  {
-    company: 'Duolingo',
-    role: 'UX Researcher',
-    location: 'Pittsburgh, PA',
-    tag: 'Books & Media',
-    desc: 'Help millions of learners stay motivated with research-backed product decisions.',
-  },
+  'Art & Design', 'Sports', 'Fitness', 'Wellness',
+  'Education', 'Books & Media', 'Animals', 'Sustainability',
 ]
 
 export default function App() {
   const [user, setUser] = useState(null)
   const [showAuth, setShowAuth] = useState(false)
+  const [jobs, setJobs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [activeInterest, setActiveInterest] = useState(null)
+  const [roleQuery, setRoleQuery] = useState('')
+  const [interestQuery, setInterestQuery] = useState('')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -53,11 +28,60 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
+  useEffect(() => {
+    fetchJobs()
+  }, [activeInterest])
+
+  async function fetchJobs() {
+    setLoading(true)
+    let query = supabase
+      .from('jobs')
+      .select('id, title, location, url, department, remote, companies(name, slug, interests, featured)')
+      .eq('active', true)
+      .order('posted_at', { ascending: false })
+      .limit(20)
+
+    if (activeInterest) {
+      query = query.contains('companies.interests', [activeInterest])
+    }
+
+    const { data, error } = await query
+    if (!error) setJobs((data ?? []).filter(j => j.companies))
+    setLoading(false)
+  }
+
+  async function handleSearch(e) {
+    e.preventDefault()
+    setLoading(true)
+    let query = supabase
+      .from('jobs')
+      .select('id, title, location, url, department, remote, companies(name, slug, interests, featured)')
+      .eq('active', true)
+      .order('posted_at', { ascending: false })
+      .limit(30)
+
+    if (roleQuery) query = query.ilike('title', `%${roleQuery}%`)
+
+    const { data, error } = await query
+    let results = (data ?? []).filter(j => j.companies)
+
+    if (interestQuery && results.length) {
+      const term = interestQuery.toLowerCase()
+      results = results.filter(j =>
+        j.companies.interests?.some(i => i.toLowerCase().includes(term))
+      )
+    }
+
+    if (!error) setJobs(results)
+    setLoading(false)
+  }
+
   const signOut = () => supabase.auth.signOut()
 
   return (
     <div className="page">
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+
       <nav className="nav">
         <span className="logo">LinkedInterests</span>
         <div className="nav-links">
@@ -88,19 +112,33 @@ export default function App() {
           Find roles at companies built around your passions — not just your résumé.
           Trade a bit of prestige for a lot of purpose.
         </p>
-        <div className="search-bar">
-          <input type="text" placeholder="Job title or skill" />
+        <form className="search-bar" onSubmit={handleSearch}>
+          <input
+            type="text"
+            placeholder="Job title or skill"
+            value={roleQuery}
+            onChange={e => setRoleQuery(e.target.value)}
+          />
           <div className="search-divider" />
-          <input type="text" placeholder="Interest (e.g. Climbing, Coffee, Gaming)" />
-          <button className="btn-primary">Search</button>
-        </div>
+          <input
+            type="text"
+            placeholder="Interest (e.g. Climbing, Coffee, Gaming)"
+            value={interestQuery}
+            onChange={e => setInterestQuery(e.target.value)}
+          />
+          <button type="submit" className="btn-primary">Search</button>
+        </form>
       </section>
 
       <section className="section">
         <h2>Browse by interest</h2>
         <div className="categories">
-          {categories.map((label) => (
-            <button key={label} className="category-pill">
+          {ALL_INTERESTS.map((label) => (
+            <button
+              key={label}
+              className={`category-pill${activeInterest === label ? ' active' : ''}`}
+              onClick={() => setActiveInterest(activeInterest === label ? null : label)}
+            >
               {label}
             </button>
           ))}
@@ -108,23 +146,40 @@ export default function App() {
       </section>
 
       <section className="section">
-        <h2>Featured jobs</h2>
-        <div className="job-grid">
-          {jobs.map((job) => (
-            <div key={job.company + job.role} className="job-card">
-              <div className="job-header">
-                <div>
-                  <div className="job-company">{job.company}</div>
-                  <div className="job-role">{job.role}</div>
+        <h2>{activeInterest ? `${activeInterest} jobs` : 'Latest jobs'}</h2>
+        {loading ? (
+          <div className="jobs-empty">Loading...</div>
+        ) : jobs.length === 0 ? (
+          <div className="jobs-empty">No jobs found — try a different filter.</div>
+        ) : (
+          <div className="job-grid">
+            {jobs.map((job) => (
+              <a
+                key={job.id}
+                href={job.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="job-card"
+              >
+                <div className="job-header">
+                  <div>
+                    <div className="job-company">{job.companies.name}</div>
+                    <div className="job-role">{job.title}</div>
+                  </div>
+                  {job.companies.interests?.[0] && (
+                    <span className="job-tag">{job.companies.interests[0]}</span>
+                  )}
                 </div>
-                <span className="job-tag">{job.tag}</span>
-              </div>
-              <div className="job-location">{job.location}</div>
-              <p className="job-desc">{job.desc}</p>
-              <button className="btn-outline btn-sm">View role →</button>
-            </div>
-          ))}
-        </div>
+                <div className="job-location">
+                  {job.remote ? 'Remote' : job.location ?? '—'}
+                </div>
+                {job.department && (
+                  <div className="job-dept">{job.department}</div>
+                )}
+              </a>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="section value-prop">

@@ -1,0 +1,15 @@
+insert into public.companies (name, slug, ats_type, ats_slug, website, interests, featured, description) values
+  ('Patagonia',     'patagonia',   'greenhouse', 'patagonia',   'https://patagonia.com',   array['Outdoors','Sustainability'],  true,  'Outdoor apparel brand built on environmental activism.'),
+  ('Spotify',       'spotify',     'greenhouse', 'spotify',     'https://spotify.com',     array['Music'],                      true,  'Global music streaming platform.'),
+  ('AllTrails',     'alltrails',   'greenhouse', 'alltrails',   'https://alltrails.com',   array['Outdoors','Fitness'],         true,  'The world''s largest outdoor activity platform.'),
+  ('Duolingo',      'duolingo',    'greenhouse', 'duolingo',    'https://duolingo.com',     array['Education','Gaming'],         true,  'Language learning app used by 500M+ people.'),
+  ('Discord',       'discord',     'greenhouse', 'discord',     'https://discord.com',     array['Gaming','Community'],         true,  'Voice, video, and text communication for communities.'),
+  ('Strava',        'strava',      'lever',      'strava',      'https://strava.com',       array['Fitness','Outdoors'],         true,  'Social fitness tracking for athletes.'),
+  ('Headspace',     'headspace',   'lever',      'headspace',   'https://headspace.com',   array['Wellness','Meditation'],      true,  'Meditation and mindfulness app.'),
+  ('Etsy',          'etsy',        'greenhouse', 'etsy',        'https://etsy.com',         array['Art & Design','Crafts'],      true,  'Global marketplace for handmade and vintage goods.'),
+  ('SoundCloud',    'soundcloud',  'lever',      'soundcloud',  'https://soundcloud.com',  array['Music'],                      false, 'Open audio platform for creators.'),
+  ('Peloton',       'peloton',     'greenhouse', 'onepeloton',  'https://onepeloton.com',  array['Fitness'],                    false, 'Connected fitness equipment and content.'),
+  ('REI',           'rei',         'greenhouse', 'rei',         'https://rei.com',          array['Outdoors'],                   false, 'Outdoor gear and apparel co-op.'),
+  ('Zwift',         'zwift',       'greenhouse', 'zwift',       'https://zwift.com',        array['Fitness','Gaming'],           false, 'Virtual cycling and running training platform.'),
+  ('MasterClass',   'masterclass', 'greenhouse', 'masterclass', 'https://masterclass.com', array['Education','Books & Media'],  false, 'Online classes taught by world-class experts.'),
+  ('Calm',          'calm',        'greenhouse', 'calm',        'https://calm.com',         array['Wellness'],                   false, 'Sleep and meditation app.');
