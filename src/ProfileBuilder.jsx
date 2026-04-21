@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import './ProfileBuilder.css'
 
 /* ─── DATA ─────────────────────────────────────────────────── */
-const SKILL_POOL = [
+export const SKILL_POOL = [
   "Product Design", "UX Research", "Figma", "Design Systems", "Prototyping",
   "Motion Design", "Brand Identity", "Illustration", "Type Design",
   "Python", "JavaScript", "React", "Swift", "Node.js", "SQL",
@@ -461,7 +461,7 @@ function Graph({ skills, interests }) {
 }
 
 /* ─── AUTOCOMPLETE HOOK ─────────────────────────────────────── */
-function useAC({ pool, filterFn }) {
+export function useAC({ pool, filterFn }) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [focused, setFocused] = useState(-1)
@@ -493,8 +493,10 @@ function useAC({ pool, filterFn }) {
 }
 
 /* ─── PROFILE BUILDER ───────────────────────────────────────── */
-export default function ProfileBuilder({ onBack }) {
-  const [screen, setScreen] = useState('form')
+export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, setScreen: setScreenProp }) {
+  const [screenLocal, setScreenLocal] = useState('form')
+  const screen = screenProp !== undefined ? screenProp : screenLocal
+  const setScreen = setScreenProp !== undefined ? setScreenProp : setScreenLocal
   const [skills, setSkills] = useState(() => new Set([
     "Product Design", "Figma", "Design Systems", "UX Research", "Prototyping"
   ]))
@@ -514,10 +516,6 @@ export default function ProfileBuilder({ onBack }) {
   const skillsAC = useAC({
     pool: SKILL_POOL,
     filterFn: (s, q) => !skills.has(s) && s.toLowerCase().includes(q),
-  })
-  const interestsAC = useAC({
-    pool: INTEREST_POOL,
-    filterFn: (i, q) => !interests.has(i.name) && i.name.toLowerCase().includes(q),
   })
 
   const addSkill = s => {
@@ -545,27 +543,28 @@ export default function ProfileBuilder({ onBack }) {
 
   return (
     <div className="pb-shell">
-      {/* TOP NAV */}
-      <div className="pb-top">
-        <button className="pb-logo" onClick={onBack}>
-          Field<span className="blue">work</span>
-        </button>
-        <div className="pb-tabs">
-          <button
-            className={`pb-tab${screen === 'form' ? ' active' : ''}`}
-            onClick={() => setScreen('form')}
-          >
-            <span className="step">1</span>Tell us who you are
+      {!noTopNav && (
+        <div className="pb-top">
+          <button className="pb-logo" onClick={onBack}>
+            Field<span className="blue">work</span>
           </button>
-          <button
-            className={`pb-tab${screen === 'profile' ? ' active' : ''}`}
-            onClick={() => setScreen('profile')}
-          >
-            <span className="step">2</span>Your profile
-          </button>
+          <div className="pb-tabs">
+            <button
+              className={`pb-tab${screen === 'form' ? ' active' : ''}`}
+              onClick={() => setScreen('form')}
+            >
+              <span className="step">1</span>Tell us who you are
+            </button>
+            <button
+              className={`pb-tab${screen === 'profile' ? ' active' : ''}`}
+              onClick={() => setScreen('profile')}
+            >
+              <span className="step">2</span>Your profile
+            </button>
+          </div>
+          <div className="pb-top-right">Profile builder</div>
         </div>
-        <div className="pb-top-right">Profile builder</div>
-      </div>
+      )}
 
       {/* FORM SCREEN */}
       {screen === 'form' && (
@@ -716,77 +715,46 @@ export default function ProfileBuilder({ onBack }) {
               <div className="q-hint">The things you'd do on a free Saturday. Be honest — this is the whole point.</div>
             </div>
             <div>
-              <div className="pb-search-wrap">
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.75" strokeLinecap="round">
-                  <circle cx="10.5" cy="10.5" r="6" />
-                  <path d="M15 15l5 5" />
-                </svg>
-                <input
-                  ref={interestsAC.inputRef}
-                  placeholder="Try: rock climbing, vinyl, mushroom foraging, D&D…"
-                  value={interestsAC.query}
-                  onChange={e => { interestsAC.setQuery(e.target.value); interestsAC.setOpen(true); interestsAC.setFocused(-1) }}
-                  onFocus={() => interestsAC.setOpen(true)}
-                  onBlur={() => setTimeout(() => interestsAC.setOpen(false), 150)}
-                  onKeyDown={e => {
-                    if (e.key === 'Backspace' && !interestsAC.query && interests.size) {
-                      const keys = [...interests.keys()]; removeInterest(keys[keys.length - 1])
-                    }
-                    interestsAC.handleKeyDown(e, addInterest)
-                  }}
-                  autoComplete="off"
-                />
-                <span className="pb-search-count">{interests.size} added</span>
-                {interestsAC.open && interestsAC.matches.length > 0 && (
-                  <div className="pb-ac">
-                    {interestsAC.matches.map((item, i) => (
-                      <div
-                        key={item.name}
-                        className={`pb-ac-item${i === interestsAC.focused ? ' focused' : ''}`}
-                        onMouseDown={() => addInterest(item)}
-                      >
-                        <span className="ac-dot" style={{ background: COLORS[item.color] }} />
-                        {item.name}
-                        <span className="ac-meta">interest</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="pb-pills">
-                {interests.size === 0 ? (
-                  <span className="pb-pills-empty">— nothing yet. Start typing above.</span>
-                ) : (
-                  [...interests].map(([name, color]) => (
-                    <span key={name} className="pb-pill">
-                      <span className="pill-dot" style={{ background: COLORS[color] }} />
-                      {name}
-                      <button className="pill-x" onClick={() => removeInterest(name)}>×</button>
-                    </span>
-                  ))
-                )}
-              </div>
-              <div className="pb-suggest">
-                <span className="suggest-lbl">Popular right now:</span>
-                {[
-                  { name: "Trail Running", color: "leaf" },
-                  { name: "Coffee", color: "sun" },
-                  { name: "Indie Games", color: "federal" },
-                  { name: "Pottery", color: "persimmon" },
-                  { name: "Birding", color: "leaf" },
-                ].map(item => (
-                  !interests.has(item.name) && (
-                    <button key={item.name} className="pb-chip" onMouseDown={() => addInterest(item)}>
-                      <span className="chip-dot" style={{ background: COLORS[item.color] }} />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {INTEREST_POOL.map(item => {
+                  const isActive = interests.has(item.name)
+                  const color = COLORS[item.color]
+                  return (
+                    <button
+                      key={item.name}
+                      onClick={() => isActive ? removeInterest(item.name) : addInterest(item)}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 8,
+                        padding: '7px 16px 7px 8px', borderRadius: 999,
+                        border: 'var(--stroke) solid var(--ink)',
+                        background: isActive ? 'var(--ink)' : 'var(--paper)',
+                        color: isActive ? 'var(--paper)' : 'var(--ink)',
+                        fontFamily: 'var(--ff-display)', fontWeight: 600, fontSize: 13,
+                        letterSpacing: '-0.01em', cursor: 'pointer',
+                        transition: 'background 0.1s, color 0.1s, transform 0.08s',
+                      }}
+                      onMouseEnter={e => !isActive && (e.currentTarget.style.transform = 'translateY(-1px)')}
+                      onMouseLeave={e => (e.currentTarget.style.transform = '')}
+                    >
+                      <span style={{
+                        width: 18, height: 18, borderRadius: '50%', flexShrink: 0, opacity: 0.9,
+                        background: isActive ? 'transparent' : color,
+                        border: `1.5px solid ${isActive ? 'var(--paper)' : color}`,
+                      }} />
                       {item.name}
                     </button>
                   )
-                ))}
+                })}
               </div>
+              {interests.size > 0 && (
+                <p style={{ marginTop: 14, fontFamily: 'var(--ff-mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
+                  {interests.size} selected
+                </p>
+              )}
             </div>
           </div>
 
-          {/* Q4: Yes/No */}
+          {/* Q4: Yes/No
           <div className="q-block">
             <div className="q-num-wrap">
               <span className="q-num">— 04</span>
@@ -814,7 +782,7 @@ export default function ProfileBuilder({ onBack }) {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* Submit */}
           <div className="pb-submit-bar">

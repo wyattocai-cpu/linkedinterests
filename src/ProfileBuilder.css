@@ -630,7 +630,7 @@
   display: grid;
   grid-template-columns: 320px 1fr;
   flex: 1;
-  min-height: calc(100vh - 60px);
+  min-height: calc(100vh - var(--pb-top-offset, 60px));
 }
 
 .pb-side {
@@ -638,8 +638,8 @@
   padding: 36px 28px;
   background: var(--paper);
   position: sticky;
-  top: 60px;
-  height: calc(100vh - 60px);
+  top: var(--pb-top-offset, 60px);
+  height: calc(100vh - var(--pb-top-offset, 60px));
   overflow-y: auto;
 }
 
@@ -760,7 +760,7 @@
   position: relative;
   background: var(--paper);
   overflow: hidden;
-  height: calc(100vh - 60px);
+  height: calc(100vh - var(--pb-top-offset, 60px));
 }
 
 .pb-graph-eyebrow {
