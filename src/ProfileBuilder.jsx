@@ -13,87 +13,64 @@ export const SKILL_POOL = [
   "Marketing", "SEO", "Operations", "Finance", "Legal",
 ]
 
-const INTEREST_POOL = [
-  { name: "Rock Climbing",      color: "leaf" },
-  { name: "Trail Running",      color: "leaf" },
-  { name: "Birding",            color: "leaf" },
-  { name: "Mushroom Foraging",  color: "leaf" },
-  { name: "Backpacking",        color: "leaf" },
-  { name: "Surfing",            color: "leaf" },
-  { name: "Vinyl Collecting",   color: "fluoro" },
-  { name: "DJing",              color: "fluoro" },
-  { name: "Live Music",         color: "fluoro" },
-  { name: "Yoga",               color: "fluoro" },
-  { name: "Indie Games",        color: "federal" },
-  { name: "Tabletop RPGs",      color: "federal" },
-  { name: "Mechanical Keyboards", color: "federal" },
-  { name: "D&D",                color: "federal" },
-  { name: "Sourdough",          color: "sun" },
-  { name: "Coffee",             color: "sun" },
-  { name: "Natural Wine",       color: "sun" },
-  { name: "Cooking",            color: "sun" },
-  { name: "Pottery",            color: "persimmon" },
-  { name: "Film Photography",   color: "persimmon" },
-  { name: "Zine Making",        color: "persimmon" },
-  { name: "Book Club",          color: "federal" },
-  { name: "Poetry",             color: "fluoro" },
+export const INTEREST_POOL = [
+  // Outdoors
+  { name: "Rock Climbing",       color: "leaf" },
+  { name: "Trail Running",       color: "leaf" },
+  { name: "Hiking",              color: "leaf" },
+  { name: "Backpacking",         color: "leaf" },
+  { name: "Surfing",             color: "leaf" },
+  { name: "Cycling",             color: "leaf" },
+  { name: "Running",             color: "leaf" },
+  { name: "Fishing",             color: "leaf" },
+  { name: "Hunting",             color: "leaf" },
+  { name: "Birding",             color: "leaf" },
+  { name: "Mushroom Foraging",   color: "leaf" },
+  { name: "Rowing",              color: "leaf" },
+  { name: "Animals",             color: "leaf" },
+  { name: "Sustainability",      color: "leaf" },
+  // Music
+  { name: "Live Music",          color: "fluoro" },
+  { name: "Playing Music",       color: "fluoro" },
+  { name: "Vinyl Collecting",    color: "fluoro" },
+  { name: "DJing",               color: "fluoro" },
+  // Fitness & Wellness
+  { name: "Fitness",             color: "fluoro" },
+  { name: "Yoga",                color: "fluoro" },
+  { name: "Fashion",             color: "fluoro" },
+  { name: "Poetry",              color: "fluoro" },
+  // Games & Puzzles
+  { name: "Indie Games",         color: "federal" },
+  { name: "Tabletop RPGs",       color: "federal" },
+  { name: "D&D",                 color: "federal" },
+  { name: "Puzzles",             color: "federal" },
+  { name: "Mechanical Keyboards",color: "federal" },
+  { name: "Sports",              color: "federal" },
+  { name: "Fantasy Sports",      color: "federal" },
+  { name: "Travel",              color: "federal" },
+  { name: "Language Learning",   color: "federal" },
+  { name: "Book Club",           color: "federal" },
+  // Food & Drink
+  { name: "Cooking",             color: "sun" },
+  { name: "Coffee",              color: "sun" },
+  { name: "Sourdough",           color: "sun" },
+  { name: "Natural Wine",        color: "sun" },
+  { name: "Craft Beer",          color: "sun" },
+  // Creative
+  { name: "Film Photography",    color: "persimmon" },
+  { name: "Pottery",             color: "persimmon" },
+  { name: "Zine Making",         color: "persimmon" },
 ]
 
-const COLORS = {
-  leaf: "#3a8a47",
-  fluoro: "#e35598",
-  federal: "#2750b6",
-  sun: "#eabc2b",
+export const COLORS = {
+  leaf:      "#3a8a47",
+  fluoro:    "#e35598",
+  federal:   "#2750b6",
+  sun:       "#eabc2b",
   persimmon: "#e8632c",
-  ink: "#181818",
+  ink:       "#181818",
 }
 
-const OVERLAPS = [
-  {
-    name: "Outdoor Brand Design",
-    c1: 'federal', c2: 'leaf',
-    skills: ["Product Design", "Brand Identity", "Figma"],
-    interests: ["Rock Climbing", "Trail Running", "Backpacking"],
-  },
-  {
-    name: "Field Research UX",
-    c1: 'federal', c2: 'leaf',
-    skills: ["UX Research", "Design Systems"],
-    interests: ["Rock Climbing", "Birding"],
-  },
-  {
-    name: "Music × Product",
-    c1: 'federal', c2: 'fluoro',
-    skills: ["Product Design", "Prototyping"],
-    interests: ["Vinyl Collecting", "DJing", "Live Music"],
-  },
-  {
-    name: "Games × Design Systems",
-    c1: 'federal', c2: 'fluoro',
-    skills: ["Design Systems", "Prototyping"],
-    interests: ["Indie Games", "Tabletop RPGs"],
-  },
-  {
-    name: "Food-Maker Tools",
-    c1: 'fluoro', c2: 'sun',
-    skills: ["Product Design", "UX Research"],
-    interests: ["Sourdough", "Coffee", "Cooking"],
-  },
-  {
-    name: "Craft × Brand",
-    c1: 'fluoro', c2: 'persimmon',
-    skills: ["Brand Identity", "Illustration"],
-    interests: ["Pottery", "Zine Making"],
-  },
-]
-
-const SOFT_PAIRS = [
-  ["Rock Climbing", "Trail Running"],
-  ["Vinyl Collecting", "DJing"],
-  ["Sourdough", "Coffee"],
-  ["Indie Games", "Tabletop RPGs"],
-  ["Film Photography", "Pottery"],
-]
 
 const YN_QUESTIONS = [
   {
@@ -124,38 +101,22 @@ const YN_QUESTIONS = [
 ]
 
 /* ─── GRAPH ─────────────────────────────────────────────────── */
-function buildGraphData(skills, interests) {
+function buildGraphData(skills, interests, userName) {
   const nodes = []
   const links = []
-
+  nodes.push({ id: 'you', kind: 'you', name: userName || 'You', r: 26, x: 0, y: 0, vx: 0, vy: 0 })
   skills.forEach(s => {
     nodes.push({ id: 's:' + s, kind: 'skill', name: s, r: 9, x: 0, y: 0, vx: 0, vy: 0 })
+    links.push({ source: 'you', target: 's:' + s })
   })
   interests.forEach((color, name) => {
     nodes.push({ id: 'i:' + name, kind: 'interest', name, color, r: 22, x: 0, y: 0, vx: 0, vy: 0 })
+    links.push({ source: 'you', target: 'i:' + name })
   })
-
-  OVERLAPS.forEach(o => {
-    const presentSk = o.skills.filter(s => skills.has(s))
-    const presentIn = o.interests.filter(n => interests.has(n))
-    if (presentSk.length && presentIn.length) {
-      const id = 'o:' + o.name
-      nodes.push({ id, kind: 'overlap', name: o.name, c1: o.c1, c2: o.c2, r: 28, x: 0, y: 0, vx: 0, vy: 0 })
-      presentSk.forEach(s => links.push({ source: id, target: 's:' + s, kind: 'ov' }))
-      presentIn.forEach(i => links.push({ source: id, target: 'i:' + i, kind: 'ov' }))
-    }
-  })
-
-  SOFT_PAIRS.forEach(([a, b]) => {
-    if (interests.has(a) && interests.has(b)) {
-      links.push({ source: 'i:' + a, target: 'i:' + b, kind: 'soft' })
-    }
-  })
-
   return { nodes, links }
 }
 
-function Graph({ skills, interests }) {
+function Graph({ skills, interests, userName }) {
   const svgRef = useRef(null)
   const containerRef = useRef(null)
   const detailRef = useRef(null)
@@ -172,52 +133,65 @@ function Graph({ skills, interests }) {
     let H = container.clientHeight
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`)
 
-    const data = buildGraphData(skills, interests)
+    const data = buildGraphData(skills, interests, userName)
     const nodeMap = new Map(data.nodes.map(n => [n.id, n]))
     data.links.forEach(l => {
       l.source = nodeMap.get(l.source)
       l.target = nodeMap.get(l.target)
     })
-    // drop any links where source/target didn't resolve
     const validLinks = data.links.filter(l => l.source && l.target)
 
-    // initial placement
+    // fix "you" at center
+    const youNode = nodeMap.get('you')
+    youNode.x = W / 2; youNode.y = H / 2
+    youNode.fx = W / 2; youNode.fy = H / 2
+
+    // scatter leaves around center
     data.nodes.forEach(n => {
-      const cx = W / 2, cy = H / 2
-      if (n.kind === 'skill') {
-        n.x = cx - 180 + (Math.random() - 0.5) * 160
-        n.y = cy + (Math.random() - 0.5) * 340
-      } else if (n.kind === 'interest') {
-        n.x = cx + 180 + (Math.random() - 0.5) * 160
-        n.y = cy + (Math.random() - 0.5) * 340
-      } else {
-        n.x = cx + (Math.random() - 0.5) * 100
-        n.y = cy + (Math.random() - 0.5) * 180
-      }
+      if (n.id === 'you') return
+      const angle = Math.random() * Math.PI * 2
+      const d = 120 + Math.random() * 80
+      n.x = W / 2 + Math.cos(angle) * d
+      n.y = H / 2 + Math.sin(angle) * d
     })
 
     svg.innerHTML = `<g id="pb-edges"></g><g id="pb-nodes"></g>`
     const edgesG = svg.querySelector('#pb-edges')
     const nodesG = svg.querySelector('#pb-nodes')
 
-    // edges
+    // straight line edges
     const edgeEls = validLinks.map(l => {
-      const p = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-      p.setAttribute('fill', 'none')
-      p.setAttribute('stroke', l.kind === 'soft' ? '#9a968b' : '#181818')
-      p.setAttribute('stroke-width', l.kind === 'soft' ? '1' : '1.25')
-      if (l.kind === 'soft') p.setAttribute('stroke-dasharray', '2 4')
-      edgesG.appendChild(p)
-      return { path: p, link: l }
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+      line.setAttribute('stroke', '#cfc4ab')
+      line.setAttribute('stroke-width', '1.25')
+      edgesG.appendChild(line)
+      return { line, link: l }
     })
 
     // nodes
     const nodeEls = data.nodes.map(n => {
       const g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
       g.setAttribute('data-id', n.id)
-      g.style.cursor = 'grab'
+      g.style.cursor = n.id === 'you' ? 'default' : 'grab'
 
-      if (n.kind === 'skill') {
+      if (n.kind === 'you') {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+        c.setAttribute('r', n.r)
+        c.setAttribute('fill', '#181818')
+        c.setAttribute('stroke', '#181818')
+        c.setAttribute('stroke-width', '1.5')
+        g.appendChild(c)
+        const t = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+        t.setAttribute('text-anchor', 'middle')
+        t.setAttribute('y', 5)
+        t.setAttribute('font-family', 'Space Grotesk, sans-serif')
+        t.setAttribute('font-size', '12')
+        t.setAttribute('font-weight', '700')
+        t.setAttribute('fill', '#f4ece0')
+        t.setAttribute('letter-spacing', '-0.01em')
+        t.textContent = n.name
+        g.appendChild(t)
+      } else if (n.kind === 'skill') {
         const sq = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
         sq.setAttribute('x', -n.r); sq.setAttribute('y', -n.r)
         sq.setAttribute('width', n.r * 2); sq.setAttribute('height', n.r * 2)
@@ -230,7 +204,7 @@ function Graph({ skills, interests }) {
         t.setAttribute('fill', '#181818'); t.setAttribute('letter-spacing', '-0.01em')
         t.textContent = n.name
         g.appendChild(t)
-      } else if (n.kind === 'interest') {
+      } else {
         const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
         c.setAttribute('r', n.r)
         c.setAttribute('fill', COLORS[n.color])
@@ -243,133 +217,91 @@ function Graph({ skills, interests }) {
         t.setAttribute('fill', '#181818'); t.setAttribute('letter-spacing', '-0.015em')
         t.textContent = n.name
         g.appendChild(t)
-      } else {
-        const c1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
-        c1.setAttribute('cx', -12); c1.setAttribute('cy', 0); c1.setAttribute('r', n.r)
-        c1.setAttribute('fill', COLORS[n.c1])
-        c1.setAttribute('stroke', '#181818'); c1.setAttribute('stroke-width', '1.5')
-        c1.style.mixBlendMode = 'multiply'
-        const c2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
-        c2.setAttribute('cx', 12); c2.setAttribute('cy', 0); c2.setAttribute('r', n.r)
-        c2.setAttribute('fill', COLORS[n.c2])
-        c2.setAttribute('stroke', '#181818'); c2.setAttribute('stroke-width', '1.5')
-        c2.style.mixBlendMode = 'multiply'
-        g.appendChild(c1); g.appendChild(c2)
-        const t = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-        t.setAttribute('text-anchor', 'middle'); t.setAttribute('y', n.r + 22)
-        t.setAttribute('font-family', 'Instrument Serif, serif')
-        t.setAttribute('font-style', 'italic')
-        t.setAttribute('font-size', '16'); t.setAttribute('fill', '#181818')
-        t.textContent = n.name
-        g.appendChild(t)
       }
 
       nodesG.appendChild(g)
 
-      // hover → tooltip
-      g.addEventListener('mouseenter', () => {
-        if (!detail) return
-        const rect = svg.getBoundingClientRect()
-        const containerRect = container.getBoundingClientRect()
-        const sx = (n.x / W) * rect.width + rect.left - containerRect.left
-        const sy = (n.y / H) * rect.height + rect.top - containerRect.top
-        detail.style.left = sx + 'px'
-        detail.style.top = sy + 'px'
+      if (n.kind !== 'you') {
+        g.addEventListener('mouseenter', () => {
+          if (!detail) return
+          const rect = svg.getBoundingClientRect()
+          const containerRect = container.getBoundingClientRect()
+          detail.style.left = (n.x / W) * rect.width + rect.left - containerRect.left + 'px'
+          detail.style.top = (n.y / H) * rect.height + rect.top - containerRect.top + 'px'
+          detail.querySelector('.nd-type-label').textContent = n.kind === 'skill' ? 'Skill' : 'Interest'
+          const sw = detail.querySelector('.nd-sw')
+          sw.style.background = n.kind === 'skill' ? '#181818' : COLORS[n.color]
+          sw.style.borderRadius = n.kind === 'skill' ? '0' : '50%'
+          detail.querySelector('.nd-name').textContent = n.name
+          detail.querySelector('.nd-desc').textContent =
+            n.kind === 'skill'
+              ? "Something you do well — shows up in job match scoring."
+              : "A passion outside work — we'll prioritize companies built around this."
+          detail.querySelector('.nd-links').innerHTML = ''
+          detail.classList.add('show')
+        })
+        g.addEventListener('mouseleave', () => detail && detail.classList.remove('show'))
 
-        detail.querySelector('.nd-type-label').textContent =
-          n.kind === 'skill' ? 'Skill' :
-          n.kind === 'interest' ? 'Interest' : 'Overlap · the sweet spot'
-        const sw = detail.querySelector('.nd-sw')
-        if (n.kind === 'skill') {
-          sw.style.background = '#181818'; sw.style.borderRadius = '0'
-        } else if (n.kind === 'interest') {
-          sw.style.background = COLORS[n.color]; sw.style.borderRadius = '50%'
-        } else {
-          sw.style.background = COLORS[n.c1]; sw.style.borderRadius = '50%'
+        let dragging = false, offX = 0, offY = 0
+        g.addEventListener('mousedown', e => {
+          dragging = true; n.fx = n.x; n.fy = n.y
+          g.style.cursor = 'grabbing'
+          const rect = svg.getBoundingClientRect()
+          offX = (e.clientX - rect.left) * (W / rect.width) - n.x
+          offY = (e.clientY - rect.top) * (H / rect.height) - n.y
+          e.preventDefault()
+        })
+        const onMove = e => {
+          if (!dragging) return
+          const rect = svg.getBoundingClientRect()
+          n.fx = (e.clientX - rect.left) * (W / rect.width) - offX
+          n.fy = (e.clientY - rect.top) * (H / rect.height) - offY
+          n.x = n.fx; n.y = n.fy
         }
-        detail.querySelector('.nd-name').textContent = n.name
-        detail.querySelector('.nd-desc').textContent =
-          n.kind === 'skill' ? "Something you do well — shows up in job match scoring." :
-          n.kind === 'interest' ? "A passion outside work — we'll prioritize companies built around this." :
-          "Where your skills meet your passions — roles you'd actually love."
-
-        const related = validLinks
-          .filter(l => l.source.id === n.id || l.target.id === n.id)
-          .map(l => l.source.id === n.id ? l.target : l.source)
-          .slice(0, 4)
-        const linksEl = detail.querySelector('.nd-links')
-        linksEl.innerHTML = '<div style="margin-bottom:4px">— Connects to</div>' + related.map(r => {
-          const col = r.kind === 'skill' ? '#181818' : r.kind === 'interest' ? COLORS[r.color] : COLORS[r.c1]
-          const rad = r.kind === 'skill' ? '0' : '50%'
-          return `<div class="nd-link-item"><span class="nd-link-dot" style="background:${col};border-radius:${rad}"></span>${r.name}</div>`
-        }).join('')
-
-        detail.classList.add('show')
-      })
-      g.addEventListener('mouseleave', () => detail && detail.classList.remove('show'))
-
-      // drag
-      let dragging = false, offX = 0, offY = 0
-      g.addEventListener('mousedown', e => {
-        dragging = true; n.fx = n.x; n.fy = n.y
-        g.style.cursor = 'grabbing'
-        const rect = svg.getBoundingClientRect()
-        offX = (e.clientX - rect.left) * (W / rect.width) - n.x
-        offY = (e.clientY - rect.top) * (H / rect.height) - n.y
-        e.preventDefault()
-      })
-      const onMove = e => {
-        if (!dragging) return
-        const rect = svg.getBoundingClientRect()
-        n.fx = (e.clientX - rect.left) * (W / rect.width) - offX
-        n.fy = (e.clientY - rect.top) * (H / rect.height) - offY
-        n.x = n.fx; n.y = n.fy
+        const onUp = () => {
+          if (dragging) { dragging = false; g.style.cursor = 'grab'; delete n.fx; delete n.fy }
+        }
+        window.addEventListener('mousemove', onMove)
+        window.addEventListener('mouseup', onUp)
+        return { g, node: n, cleanup: () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) } }
       }
-      const onUp = () => {
-        if (dragging) { dragging = false; g.style.cursor = 'grab'; delete n.fx; delete n.fy }
-      }
-      window.addEventListener('mousemove', onMove)
-      window.addEventListener('mouseup', onUp)
 
-      return { g, node: n, cleanup: () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) } }
+      return { g, node: n, cleanup: () => {} }
     })
 
     let alpha = 1
 
     function runStep() {
-      data.nodes.forEach(n => {
-        if (n.fx != null) { n.x = n.fx; n.y = n.fy; n.vx = 0; n.vy = 0; return }
-        n.vx += (W / 2 - n.x) * 0.002 * alpha
-        n.vy += (H / 2 - n.y) * 0.002 * alpha
-      })
-      validLinks.forEach(l => {
-        const dx = l.target.x - l.source.x
-        const dy = l.target.y - l.source.y
+      const leaves = data.nodes.filter(n => n.id !== 'you')
+
+      leaves.forEach(n => {
+        if (n.fx != null) return
+        const dx = n.x - W / 2
+        const dy = n.y - H / 2
         const d = Math.sqrt(dx * dx + dy * dy) || 0.001
-        const desired = l.kind === 'soft' ? 110 : 140
-        const k = l.kind === 'soft' ? 0.015 : 0.03
-        const f = (d - desired) * k * alpha
-        const fx = (dx / d) * f, fy = (dy / d) * f
-        if (l.source.fx == null) { l.source.vx += fx; l.source.vy += fy }
-        if (l.target.fx == null) { l.target.vx -= fx; l.target.vy -= fy }
+        const desired = n.kind === 'skill' ? 150 : 175
+        const f = (d - desired) * 0.04 * alpha
+        n.vx -= (dx / d) * f
+        n.vy -= (dy / d) * f
       })
-      for (let i = 0; i < data.nodes.length; i++) {
-        for (let j = i + 1; j < data.nodes.length; j++) {
-          const a = data.nodes[i], b = data.nodes[j]
+
+      for (let i = 0; i < leaves.length; i++) {
+        for (let j = i + 1; j < leaves.length; j++) {
+          const a = leaves[i], b = leaves[j]
           const dx = b.x - a.x, dy = b.y - a.y
           const d2 = dx * dx + dy * dy + 0.01
           const d = Math.sqrt(d2)
-          const minD = a.r + b.r + 20
-          if (d < minD * 3) {
-            const f = (1800 / d2) * alpha
+          if (d < (a.r + b.r + 40) * 2.5) {
+            const f = (2200 / d2) * alpha
             const fx = (dx / d) * f, fy = (dy / d) * f
             if (a.fx == null) { a.vx -= fx; a.vy -= fy }
             if (b.fx == null) { b.vx += fx; b.vy += fy }
           }
         }
       }
+
       const pad = 80
-      data.nodes.forEach(n => {
+      leaves.forEach(n => {
         if (n.fx != null) return
         n.vx *= 0.82; n.vy *= 0.82
         n.x += n.vx; n.y += n.vy
@@ -379,15 +311,11 @@ function Graph({ skills, interests }) {
     }
 
     function draw() {
-      edgeEls.forEach(({ path, link }) => {
-        const sx = link.source.x, sy = link.source.y
-        const tx = link.target.x, ty = link.target.y
-        const mx = (sx + tx) / 2, my = (sy + ty) / 2
-        const dx = tx - sx, dy = ty - sy
-        const len = Math.sqrt(dx * dx + dy * dy) || 1
-        const off = Math.min(40, len * 0.15)
-        const nx = (-dy / len) * off, ny = (dx / len) * off
-        path.setAttribute('d', `M ${sx} ${sy} Q ${mx + nx} ${my + ny} ${tx} ${ty}`)
+      edgeEls.forEach(({ line, link }) => {
+        line.setAttribute('x1', link.source.x)
+        line.setAttribute('y1', link.source.y)
+        line.setAttribute('x2', link.target.x)
+        line.setAttribute('y2', link.target.y)
       })
       nodeEls.forEach(({ g, node }) => {
         g.setAttribute('transform', `translate(${node.x}, ${node.y})`)
@@ -398,13 +326,10 @@ function Graph({ skills, interests }) {
       runStep()
       alpha *= 0.98
       draw()
-      if (alpha > 0.001) {
-        rafRef.current = requestAnimationFrame(tick)
-      }
+      if (alpha > 0.001) rafRef.current = requestAnimationFrame(tick)
     }
     rafRef.current = requestAnimationFrame(tick)
 
-    // zoom controls
     function zoomTo(z) {
       stateRef.current.zoom = Math.max(0.4, Math.min(2.5, z))
       const s = stateRef.current.zoom
@@ -422,6 +347,8 @@ function Graph({ skills, interests }) {
     const onResize = () => {
       W = container.clientWidth; H = container.clientHeight
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`)
+      youNode.fx = W / 2; youNode.fy = H / 2
+      youNode.x = W / 2; youNode.y = H / 2
       alpha = 0.5
     }
     window.addEventListener('resize', onResize)
@@ -431,12 +358,12 @@ function Graph({ skills, interests }) {
       window.removeEventListener('resize', onResize)
       nodeEls.forEach(el => el.cleanup())
     }
-  }, [skills, interests])
+  }, [skills, interests, userName])
 
   return (
     <div className="pb-main" ref={containerRef}>
-      <div className="pb-graph-eyebrow">§ Your passion-skill graph</div>
-      <div className="pb-graph-heading">The shape of your <em>work-life</em> Venn.</div>
+      <div className="pb-graph-eyebrow">§ Your passion-skill map</div>
+      <div className="pb-graph-heading">Your <em>skills</em> and <em>interests.</em></div>
 
       <svg id="pb-graph" ref={svgRef} xmlns="http://www.w3.org/2000/svg" />
 
@@ -450,7 +377,7 @@ function Graph({ skills, interests }) {
         <div className="nd-links" />
       </div>
 
-      <div className="pb-graph-hint">Hover a node to see connections · drag to rearrange.</div>
+      <div className="pb-graph-hint">Hover a node to learn more · drag to rearrange.</div>
       <div className="pb-zoom">
         <button data-zoom="out">−</button>
         <button data-zoom="reset">◎</button>
@@ -493,19 +420,22 @@ export function useAC({ pool, filterFn }) {
 }
 
 /* ─── PROFILE BUILDER ───────────────────────────────────────── */
-export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, setScreen: setScreenProp }) {
+export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, setScreen: setScreenProp, user, onSave, initialSkills, initialInterests, initialCurrentRole, initialLocationPref, onSearchJobs }) {
   const [screenLocal, setScreenLocal] = useState('form')
   const screen = screenProp !== undefined ? screenProp : screenLocal
   const setScreen = setScreenProp !== undefined ? setScreenProp : setScreenLocal
-  const [skills, setSkills] = useState(() => new Set([
-    "Product Design", "Figma", "Design Systems", "UX Research", "Prototyping"
-  ]))
-  const [interests, setInterests] = useState(() => new Map([
-    ["Rock Climbing", "leaf"],
-    ["Vinyl Collecting", "fluoro"],
-    ["Sourdough", "sun"],
-    ["Indie Games", "federal"],
-  ]))
+  const [currentRole, setCurrentRole] = useState(initialCurrentRole || '')
+  const [locationPref, setLocationPref] = useState(initialLocationPref || { type: 'any', city: '' })
+  const [skills, setSkills] = useState(() => initialSkills ? new Set(initialSkills) : new Set())
+  const [interests, setInterests] = useState(() => {
+    if (initialInterests) {
+      return new Map(initialInterests.map(name => {
+        const entry = INTEREST_POOL.find(i => i.name === name)
+        return [name, entry ? entry.color : 'ink']
+      }))
+    }
+    return new Map()
+  })
   const [ynState, setYnState] = useState({
     outdoors: 'yes', mission: 'yes', remote: 'maybe', small: 'yes', animals: null,
   })
@@ -527,8 +457,6 @@ export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, s
 
   const addInterest = i => {
     setInterests(prev => new Map([...prev, [i.name, i.color]]))
-    interestsAC.setQuery('')
-    interestsAC.setOpen(false)
   }
   const removeInterest = name => setInterests(prev => { const n = new Map(prev); n.delete(name); return n })
 
@@ -537,9 +465,24 @@ export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, s
     setSkills(prev => new Set([...prev, "Data Viz", "Copywriting"]))
   }
 
-  const overlapCount = OVERLAPS.filter(o =>
-    o.skills.some(s => skills.has(s)) && o.interests.some(i => interests.has(i))
-  ).length
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  const handleSave = async () => {
+    if (!onSave || saving) return
+    setSaving(true)
+    setSaved(false)
+    await onSave({
+      skills: [...skills],
+      interests: [...interests.keys()],
+      prefs: ynState,
+      currentRole,
+      locationPref,
+    })
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+  }
 
   return (
     <div className="pb-shell">
@@ -636,10 +579,76 @@ export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, s
             </div>
           </div>
 
-          {/* Q2: Skills */}
+          {/* Q2: Role + Location */}
           <div className="q-block">
             <div className="q-num-wrap">
               <span className="q-num">— 02</span>
+              <div className="q-label">What's your <em>current role?</em></div>
+              <div className="q-hint">Used to search live jobs. E.g. "iOS Engineer", "Product Designer".</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <input
+                value={currentRole}
+                onChange={e => setCurrentRole(e.target.value)}
+                placeholder="e.g. iOS Engineer, Product Designer, Data Scientist…"
+                style={{
+                  border: 'var(--stroke) solid var(--ink)', padding: '13px 16px',
+                  background: 'var(--paper)', fontFamily: 'var(--ff-display)',
+                  fontSize: 14, color: 'var(--ink)', outline: 'none', width: '100%',
+                }}
+                onFocus={e => e.currentTarget.style.boxShadow = '4px 4px 0 var(--federal)'}
+                onBlur={e => e.currentTarget.style.boxShadow = 'none'}
+              />
+              <div>
+                <div style={{ fontFamily: 'var(--ff-mono)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 10 }}>
+                  Location preference
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {[
+                    { value: 'remote', label: 'Remote only' },
+                    { value: 'any',    label: "Don't care" },
+                    { value: 'city',   label: 'Specific city' },
+                  ].map(({ value, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => setLocationPref(p => ({ ...p, type: value }))}
+                      style={{
+                        padding: '7px 18px', borderRadius: 999,
+                        border: 'var(--stroke) solid var(--ink)',
+                        background: locationPref.type === value ? 'var(--ink)' : 'var(--paper)',
+                        color: locationPref.type === value ? 'var(--paper)' : 'var(--ink)',
+                        fontFamily: 'var(--ff-display)', fontWeight: 600, fontSize: 13,
+                        letterSpacing: '-0.01em', cursor: 'pointer',
+                        transition: 'background 0.1s, color 0.1s',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {locationPref.type === 'city' && (
+                  <input
+                    value={locationPref.city}
+                    onChange={e => setLocationPref(p => ({ ...p, city: e.target.value }))}
+                    placeholder="City name — e.g. San Francisco, New York…"
+                    style={{
+                      marginTop: 12, width: '100%',
+                      border: 'var(--stroke) solid var(--ink)', padding: '11px 16px',
+                      background: 'var(--paper)', fontFamily: 'var(--ff-display)',
+                      fontSize: 14, color: 'var(--ink)', outline: 'none',
+                    }}
+                    onFocus={e => e.currentTarget.style.boxShadow = '4px 4px 0 var(--federal)'}
+                    onBlur={e => e.currentTarget.style.boxShadow = 'none'}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Q3: Skills */}
+          <div className="q-block">
+            <div className="q-num-wrap">
+              <span className="q-num">— 03</span>
               <div className="q-label">What can you <em>do?</em></div>
               <div className="q-hint">Your skills, tools, and disciplines. Aim for 5–12.</div>
             </div>
@@ -707,10 +716,10 @@ export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, s
             </div>
           </div>
 
-          {/* Q3: Interests */}
+          {/* Q4: Interests */}
           <div className="q-block">
             <div className="q-num-wrap">
-              <span className="q-num">— 03</span>
+              <span className="q-num">— 04</span>
               <div className="q-label">What are you <em>into?</em></div>
               <div className="q-hint">The things you'd do on a free Saturday. Be honest — this is the whole point.</div>
             </div>
@@ -790,7 +799,20 @@ export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, s
               <strong>Looking good.</strong> You've filled in enough — you can always add more later from your profile.
             </div>
             <div className="pb-btn-row">
-              <button className="pb-btn ghost">Save &amp; finish later</button>
+              {user ? (
+                <button
+                  className="pb-btn ghost"
+                  onClick={handleSave}
+                  disabled={saving}
+                  style={{ opacity: saving ? 0.7 : 1 }}
+                >
+                  {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save profile'}
+                </button>
+              ) : (
+                <button className="pb-btn ghost" style={{ opacity: 0.5, cursor: 'not-allowed' }} title="Sign in to save">
+                  Sign in to save
+                </button>
+              )}
               <button className="pb-btn" onClick={() => setScreen('profile')}>See my profile →</button>
             </div>
           </div>
@@ -801,17 +823,17 @@ export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, s
       {screen === 'profile' && (
         <div className="pb-profile">
           <aside className="pb-side">
-            <div className="pb-avatar"><span>AC</span></div>
-            <div className="pb-name">Avery Chen</div>
-            <div className="pb-handle">@averyc · Brooklyn, NY</div>
-            <div className="pb-bio">
-              <span className="hi">Product designer</span> who climbs on weekends, DJs on weeknights, and has strong opinions about sourdough hydration ratios.
-            </div>
-            <div className="pb-meta">
-              <div className="meta-row"><span>— Looking for</span><span className="meta-val">Full-time</span></div>
-              <div className="meta-row"><span>— Open to</span><span className="meta-val">Remote-first</span></div>
-              <div className="meta-row"><span>— Notice period</span><span className="meta-val">4 weeks</span></div>
-            </div>
+            {user?.user_metadata?.avatar_url ? (
+              <div className="pb-avatar" style={{ padding: 0, overflow: 'hidden' }}>
+                <img src={user.user_metadata.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+              </div>
+            ) : (
+              <div className="pb-avatar">
+                <span>{(user?.user_metadata?.full_name || user?.email || 'You').slice(0, 2).toUpperCase()}</span>
+              </div>
+            )}
+            <div className="pb-name">{user?.user_metadata?.full_name || user?.email || 'Your Profile'}</div>
+
             <div className="pb-stats">
               <div className="pb-stat">
                 <div className="stat-n blue">{skills.size}</div>
@@ -820,10 +842,6 @@ export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, s
               <div className="pb-stat">
                 <div className="stat-n pink">{interests.size}</div>
                 <div className="stat-l">Interests</div>
-              </div>
-              <div className="pb-stat">
-                <div className="stat-n">{overlapCount}</div>
-                <div className="stat-l">Overlaps</div>
               </div>
             </div>
 
@@ -839,20 +857,24 @@ export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, s
                 Interest
                 <span className="legend-meta">what you love</span>
               </div>
-              <div className="legend-row">
-                <span className="lmark ov" />
-                Overlap
-                <span className="legend-meta">the sweet spot</span>
-              </div>
             </div>
 
             <div className="pb-actions">
-              <button className="pb-btn pb-btn-full">See matching jobs →</button>
+              {onSearchJobs && (
+                <button className="pb-btn pb-btn-full" onClick={() => onSearchJobs([...interests.keys()])}>
+                  Search matching jobs →
+                </button>
+              )}
               <button className="pb-btn pb-btn-full pb-btn-sec" onClick={() => setScreen('form')}>Edit profile</button>
             </div>
           </aside>
 
-          <Graph key={`${[...skills].join(',')}-${[...interests.keys()].join(',')}`} skills={skills} interests={interests} />
+          <Graph
+            key={`${[...skills].join(',')}-${[...interests.keys()].join(',')}`}
+            skills={skills}
+            interests={interests}
+            userName={user?.user_metadata?.full_name?.split(' ')[0] || 'You'}
+          />
         </div>
       )}
     </div>

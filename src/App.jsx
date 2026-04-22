@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import './App.css';
-import ProfileBuilder, { useAC, SKILL_POOL } from './ProfileBuilder';
+import ProfileBuilder, { useAC, SKILL_POOL, INTEREST_POOL, COLORS } from './ProfileBuilder';
+import { supabase } from './supabase';
 
 // ─── STATIC DATA ────────────────────────────────────────────
 // FEATURED_JOBS is derived from ALL_JOBS below — defined after ALL_JOBS
@@ -58,7 +59,7 @@ const btnOutline = {
 };
 
 // ─── NAV ────────────────────────────────────────────────────
-function Nav({ page, setPage }) {
+function Nav({ page, setPage, user, onSignIn, onSignOut }) {
   const navLink = (label, target) => (
     <button key={label} onClick={() => setPage(target)} style={{
       background: "none", border: "none", padding: 0,
@@ -91,7 +92,7 @@ function Nav({ page, setPage }) {
 
       <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
         {navLink("Browse Jobs", "jobs")}
-        {navLink("Build Profile", "profile")}
+        {navLink("Profile", "profile")}
         <button
           onClick={() => setPage("home")}
           style={btnOutline}
@@ -100,14 +101,42 @@ function Nav({ page, setPage }) {
         >
           Submit a company
         </button>
-        <button
-          onClick={() => setPage("home")}
-          style={btnPrimary}
-          onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 var(--federal)"; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "3px 3px 0 var(--federal)"; }}
-        >
-          Get early access <ArrowRight />
-        </button>
+        {user ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: "50%",
+              border: "var(--stroke) solid var(--ink)",
+              overflow: "hidden", flexShrink: 0,
+              background: "var(--federal)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              {user.user_metadata?.avatar_url ? (
+                <img src={user.user_metadata.avatar_url} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+              ) : (
+                <span style={{ fontFamily: "var(--ff-display)", fontWeight: 700, fontSize: 13, color: "var(--paper)" }}>
+                  {(user.user_metadata?.full_name || user.email || "?")[0].toUpperCase()}
+                </span>
+              )}
+            </div>
+            <button
+              onClick={onSignOut}
+              style={{ ...btnOutline, padding: "7px 14px", fontSize: 12, boxShadow: "2px 2px 0 var(--ink)" }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "3px 3px 0 var(--ink)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "2px 2px 0 var(--ink)"; }}
+            >
+              Sign out
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={onSignIn}
+            style={btnPrimary}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 var(--federal)"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "3px 3px 0 var(--federal)"; }}
+          >
+            Sign in with Google <ArrowRight />
+          </button>
+        )}
       </div>
     </nav>
   );
@@ -196,16 +225,10 @@ function Hero({ onNav }) {
 }
 
 // ─── BROWSE JOBS DATA ────────────────────────────────────────
-const INTEREST_COLORS = {
-  "Outdoors": "#3a8a47", "Hiking": "#3a8a47", "Running": "#3a8a47",
-  "Biking": "#3a8a47", "Fishing": "#3a8a47", "Hunting": "#3a8a47",
-  "Rowing": "#3a8a47", "World-Saving": "#3a8a47", "Animals": "#3a8a47",
-  "Music": "#e35598", "Fashion": "#e35598", "Photography": "#e35598",
-  "Sports": "#2750b6", "Language": "#2750b6", "Travel": "#2750b6",
-  "Games": "#2750b6", "Puzzles": "#2750b6",
-  "Food": "#eabc2b", "Beer": "#eabc2b", "YC": "#eabc2b",
-  "Fitness": "#e8632c", "Chillin": "#e8632c",
-  "Gambling": "#181818",
+// Derives hex color for any interest name from the shared INTEREST_POOL
+const interestHex = (name) => {
+  const entry = INTEREST_POOL.find(i => i.name === name);
+  return entry ? COLORS[entry.color] : "#9a968b";
 };
 
 const SKILL_TO_DEPT = {
@@ -253,49 +276,49 @@ const PREFS = [
 
 const ALL_JOBS = [
   // Outdoors & Nature
-  { id: "onx-swe",        company: "OnX",         role: "Senior Software Engineer, Maps",           location: "Missoula, MT",       remote: true,  tag: "Outdoors",     tags: ["Outdoors","Fishing","Hunting","Hiking"],   tagColor: "#3a8a47", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: true,  url: "https://job-boards.greenhouse.io/onxmaps/jobs",      description: "Build maps that help hunters find public land and hikers plan epic trips. OnX's audience uses what you ship on actual adventures — not just on their phones at their desks." },
-  { id: "strava-ios",     company: "Strava",       role: "Staff iOS Engineer, Activity Feed",        location: "San Francisco, CA",  remote: true,  tag: "Outdoors",     tags: ["Outdoors","Hiking","Running","Biking"],    tagColor: "#3a8a47", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: false, url: "https://jobs.ashbyhq.com/strava",                    description: "Your code shows up in the feed of 100M+ athletes. The team runs, rides, and hikes — they're building for themselves." },
-  { id: "garmin-emb",     company: "Garmin",       role: "Embedded Software Engineer",               location: "Olathe, KS",         remote: false, tag: "Outdoors",     tags: ["Outdoors","Hiking","Biking","Running"],    tagColor: "#3a8a47", cardBg: "#f4ece0", dept: "Engineering", mission: false, small: false, url: "https://www.garmin.com/en-US/",                      description: "Write firmware that goes everywhere: summits, open water, the trail at 5am. Garmin devices are trusted when nothing else is around." },
-  { id: "alltrails-em",   company: "AllTrails",    role: "Engineering Manager, Mobile",              location: "San Francisco, CA",  remote: true,  tag: "Outdoors",     tags: ["Outdoors","Hiking","Running"],             tagColor: "#3a8a47", cardBg: "#eabc2b", dept: "Product",     mission: true,  small: false, url: "https://jobs.lever.co/alltrails",                    description: "Lead mobile engineers building the app millions of people open before every hike. AllTrails has a rare combination: massive scale and genuine mission." },
-  { id: "patagonia-dir",  company: "Patagonia",    role: "Director of Digital Products",             location: "Ventura, CA",        remote: false, tag: "Outdoors",     tags: ["Outdoors","Fashion","World-Saving"],       tagColor: "#3a8a47", cardBg: "#3a8a47", dept: "Product",     mission: true,  small: false, url: "https://www.patagonia.com/home/",                    description: "Run digital products for the most respected outdoor brand on the planet. Patagonia donates its profits to environmental causes — every feature you ship supports that." },
-  { id: "rei-pd",         company: "REI",          role: "Product Designer, Digital Commerce",       location: "Kent, WA",           remote: true,  tag: "Outdoors",     tags: ["Outdoors","Fashion"],                      tagColor: "#3a8a47", cardBg: "#eabc2b", dept: "Design",      mission: true,  small: false, url: "https://www.rei.com/",                               description: "Design the shopping and trip-planning experience for the co-op that puts gear in the hands of millions of outdoor enthusiasts." },
-  { id: "gopro-cv",       company: "GoPro",        role: "Computer Vision Engineer",                 location: "San Mateo, CA",      remote: true,  tag: "Photography",  tags: ["Photography","Outdoors"],                  tagColor: "#e35598", cardBg: "#f4ece0", dept: "Engineering", mission: false, small: false, url: "https://gopro.com/en/us/",                           description: "Build the computer vision behind the world's most extreme cameras. Your algorithms get deployed to wingsuits, surfboards, and ski runs." },
-  { id: "fishbrain-ios",  company: "Fishbrain",    role: "iOS Engineer, Social Features",            location: "Stockholm, Sweden",  remote: true,  tag: "Fishing",      tags: ["Fishing","Outdoors"],                      tagColor: "#3a8a47", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: true,  url: "https://fishbrain.com/",                             description: "Build iOS features for the world's largest fishing app. Fishbrain is small, remote-first, and their users genuinely care about what you build." },
-  { id: "john-deere-swe", company: "John Deere",   role: "Software Engineer, Precision Ag",          location: "Moline, IL",         remote: false, tag: "Outdoors",     tags: ["Outdoors"],                               tagColor: "#3a8a47", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: false, url: "https://about.deere.com/",                           description: "Write precision agriculture software that helps farmers get more from their land. Your code runs on tractors in fields across the world." },
-  { id: "outside-pm",     company: "Outside",      role: "Product Manager, Digital Media",           location: "Santa Fe, NM",       remote: true,  tag: "Outdoors",     tags: ["Outdoors"],                               tagColor: "#3a8a47", cardBg: "#f4ece0", dept: "Product",     mission: true,  small: true,  url: "https://www.outsideonline.com/featured",             description: "Manage digital products for the media brand covering trail running, skiing, climbing, and everything in between. Mission-driven, small team energy." },
-  { id: "halter-iot",     company: "Halter",       role: "Software Engineer, IoT",                   location: "Auckland, NZ",       remote: false, tag: "Animals",      tags: ["Animals","Outdoors","YC"],                 tagColor: "#3a8a47", cardBg: "#3a8a47", dept: "Engineering", mission: true,  small: true,  url: "https://jobs.ashbyhq.com/halter/",                   description: "Build IoT software that monitors cattle on New Zealand farms — GPS collars, solar-powered, no cell service. YC-backed and genuinely novel engineering." },
+  { id: "onx-swe",        company: "OnX",         role: "Senior Software Engineer, Maps",           location: "Missoula, MT",       remote: true,  tag: "Outdoors",   tags: ["Hiking","Fishing","Hunting","Backpacking"],              tagColor: "#3a8a47", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: true,  url: "https://job-boards.greenhouse.io/onxmaps/jobs",      description: "Build maps that help hunters find public land and hikers plan epic trips. OnX's audience uses what you ship on actual adventures — not just on their phones at their desks." },
+  { id: "strava-ios",     company: "Strava",       role: "Staff iOS Engineer, Activity Feed",        location: "San Francisco, CA",  remote: true,  tag: "Outdoors",   tags: ["Running","Cycling","Hiking","Trail Running"],            tagColor: "#3a8a47", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: false, url: "https://jobs.ashbyhq.com/strava",                    description: "Your code shows up in the feed of 100M+ athletes. The team runs, rides, and hikes — they're building for themselves." },
+  { id: "garmin-emb",     company: "Garmin",       role: "Embedded Software Engineer",               location: "Olathe, KS",         remote: false, tag: "Outdoors",   tags: ["Hiking","Cycling","Running"],                            tagColor: "#3a8a47", cardBg: "#f4ece0", dept: "Engineering", mission: false, small: false, url: "https://www.garmin.com/en-US/",                      description: "Write firmware that goes everywhere: summits, open water, the trail at 5am. Garmin devices are trusted when nothing else is around." },
+  { id: "alltrails-em",   company: "AllTrails",    role: "Engineering Manager, Mobile",              location: "San Francisco, CA",  remote: true,  tag: "Outdoors",   tags: ["Hiking","Trail Running","Running","Backpacking"],        tagColor: "#3a8a47", cardBg: "#eabc2b", dept: "Product",     mission: true,  small: false, url: "https://jobs.lever.co/alltrails",                    description: "Lead mobile engineers building the app millions of people open before every hike. AllTrails has a rare combination: massive scale and genuine mission." },
+  { id: "patagonia-dir",  company: "Patagonia",    role: "Director of Digital Products",             location: "Ventura, CA",        remote: false, tag: "Outdoors",   tags: ["Sustainability","Hiking","Surfing","Fashion"],           tagColor: "#3a8a47", cardBg: "#3a8a47", dept: "Product",     mission: true,  small: false, url: "https://www.patagonia.com/home/",                    description: "Run digital products for the most respected outdoor brand on the planet. Patagonia donates its profits to environmental causes — every feature you ship supports that." },
+  { id: "rei-pd",         company: "REI",          role: "Product Designer, Digital Commerce",       location: "Kent, WA",           remote: true,  tag: "Outdoors",   tags: ["Hiking","Fashion","Backpacking","Sustainability"],       tagColor: "#3a8a47", cardBg: "#eabc2b", dept: "Design",      mission: true,  small: false, url: "https://www.rei.com/",                               description: "Design the shopping and trip-planning experience for the co-op that puts gear in the hands of millions of outdoor enthusiasts." },
+  { id: "gopro-cv",       company: "GoPro",        role: "Computer Vision Engineer",                 location: "San Mateo, CA",      remote: true,  tag: "Photography",tags: ["Film Photography","Rock Climbing","Surfing","Hiking"],  tagColor: "#e35598", cardBg: "#f4ece0", dept: "Engineering", mission: false, small: false, url: "https://gopro.com/en/us/",                           description: "Build the computer vision behind the world's most extreme cameras. Your algorithms get deployed to wingsuits, surfboards, and ski runs." },
+  { id: "fishbrain-ios",  company: "Fishbrain",    role: "iOS Engineer, Social Features",            location: "Stockholm, Sweden",  remote: true,  tag: "Fishing",    tags: ["Fishing","Hiking"],                                     tagColor: "#3a8a47", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: true,  url: "https://fishbrain.com/",                             description: "Build iOS features for the world's largest fishing app. Fishbrain is small, remote-first, and their users genuinely care about what you build." },
+  { id: "john-deere-swe", company: "John Deere",   role: "Software Engineer, Precision Ag",          location: "Moline, IL",         remote: false, tag: "Outdoors",   tags: ["Sustainability","Hiking"],                              tagColor: "#3a8a47", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: false, url: "https://about.deere.com/",                           description: "Write precision agriculture software that helps farmers get more from their land. Your code runs on tractors in fields across the world." },
+  { id: "outside-pm",     company: "Outside",      role: "Product Manager, Digital Media",           location: "Santa Fe, NM",       remote: true,  tag: "Outdoors",   tags: ["Hiking","Trail Running","Rock Climbing","Surfing"],     tagColor: "#3a8a47", cardBg: "#f4ece0", dept: "Product",     mission: true,  small: true,  url: "https://www.outsideonline.com/featured",             description: "Manage digital products for the media brand covering trail running, skiing, climbing, and everything in between. Mission-driven, small team energy." },
+  { id: "halter-iot",     company: "Halter",       role: "Software Engineer, IoT",                   location: "Auckland, NZ",       remote: false, tag: "Animals",    tags: ["Animals","Sustainability"],                             tagColor: "#3a8a47", cardBg: "#3a8a47", dept: "Engineering", mission: true,  small: true,  url: "https://jobs.ashbyhq.com/halter/",                   description: "Build IoT software that monitors cattle on New Zealand farms — GPS collars, solar-powered, no cell service. YC-backed and genuinely novel engineering." },
   // Music
-  { id: "spotify-be",     company: "Spotify",      role: "Senior Backend Engineer, Recommendations", location: "New York, NY",       remote: true,  tag: "Music",        tags: ["Music"],                                  tagColor: "#e35598", cardBg: "#e35598", dept: "Engineering", mission: false, small: false, url: "https://open.spotify.com/",                          description: "Build the recommendation engine behind billions of streams. Spotify's engineering culture is top-tier and the domain is genuinely fun." },
-  { id: "fender-ux",      company: "Fender",       role: "Senior UX Designer, Digital Products",     location: "Los Angeles, CA",    remote: true,  tag: "Music",        tags: ["Music"],                                  tagColor: "#e35598", cardBg: "#e35598", dept: "Design",      mission: false, small: false, url: "https://job-boards.greenhouse.io/fender",            description: "Design digital products for the most iconic guitar brand in history. Fender Digital is a small product org inside a massive cultural institution." },
-  { id: "soundcloud-eng", company: "SoundCloud",   role: "Staff Engineer, Audio Streaming",           location: "Berlin, Germany",    remote: true,  tag: "Music",        tags: ["Music"],                                  tagColor: "#e35598", cardBg: "#181818", dept: "Engineering", mission: false, small: false, url: "https://job-boards.greenhouse.io/soundcloud71",      description: "Work on the audio streaming infrastructure that powers SoundCloud. Berlin-based engineering culture, deep music community, and genuinely hard scale problems." },
-  { id: "songtradr-be",   company: "Songtradr",    role: "Backend Engineer, Music Licensing",         location: "Los Angeles, CA",    remote: true,  tag: "Music",        tags: ["Music"],                                  tagColor: "#e35598", cardBg: "#f4ece0", dept: "Engineering", mission: false, small: true,  url: "https://songtradr.bamboohr.com/careers",             description: "Build the backend for a music licensing marketplace. Small team, interesting domain, and you'll actually understand what your product does." },
+  { id: "spotify-be",     company: "Spotify",      role: "Senior Backend Engineer, Recommendations", location: "New York, NY",       remote: true,  tag: "Music",      tags: ["Live Music","Vinyl Collecting","DJing"],                tagColor: "#e35598", cardBg: "#e35598", dept: "Engineering", mission: false, small: false, url: "https://open.spotify.com/",                          description: "Build the recommendation engine behind billions of streams. Spotify's engineering culture is top-tier and the domain is genuinely fun." },
+  { id: "fender-ux",      company: "Fender",       role: "Senior UX Designer, Digital Products",     location: "Los Angeles, CA",    remote: true,  tag: "Music",      tags: ["Playing Music","Live Music"],                           tagColor: "#e35598", cardBg: "#e35598", dept: "Design",      mission: false, small: false, url: "https://job-boards.greenhouse.io/fender",            description: "Design digital products for the most iconic guitar brand in history. Fender Digital is a small product org inside a massive cultural institution." },
+  { id: "soundcloud-eng", company: "SoundCloud",   role: "Staff Engineer, Audio Streaming",           location: "Berlin, Germany",    remote: true,  tag: "Music",      tags: ["Live Music","DJing","Playing Music","Vinyl Collecting"],tagColor: "#e35598", cardBg: "#181818", dept: "Engineering", mission: false, small: false, url: "https://job-boards.greenhouse.io/soundcloud71",      description: "Work on the audio streaming infrastructure that powers SoundCloud. Berlin-based engineering culture, deep music community, and genuinely hard scale problems." },
+  { id: "songtradr-be",   company: "Songtradr",    role: "Backend Engineer, Music Licensing",         location: "Los Angeles, CA",    remote: true,  tag: "Music",      tags: ["Playing Music","Live Music"],                           tagColor: "#e35598", cardBg: "#f4ece0", dept: "Engineering", mission: false, small: true,  url: "https://songtradr.bamboohr.com/careers",             description: "Build the backend for a music licensing marketplace. Small team, interesting domain, and you'll actually understand what your product does." },
   // Games
-  { id: "nyt-fe",         company: "NYT Games",    role: "Senior Frontend Engineer, Puzzles",         location: "New York, NY",       remote: false, tag: "Games",        tags: ["Games","Puzzles"],                         tagColor: "#2750b6", cardBg: "#181818", dept: "Engineering", mission: false, small: false, url: "https://job-boards.greenhouse.io/thenewyorktimes",   description: "Ship the frontend for Wordle, Connections, Spelling Bee, and the Crossword. NYT Games has some of the most engaged users in tech." },
-  { id: "roblox-swe",     company: "Roblox",       role: "Senior Software Engineer, Platform",        location: "San Mateo, CA",      remote: false, tag: "Games",        tags: ["Games"],                                  tagColor: "#2750b6", cardBg: "#e8632c", dept: "Engineering", mission: false, small: false, url: "https://www.roblox.com/",                            description: "Scale the platform where millions of kids create and play games every day. Roblox's technical challenges are genuinely hard and interesting." },
-  { id: "discord-staff",  company: "Discord",      role: "Staff Engineer, Voice & Video",             location: "San Francisco, CA",  remote: true,  tag: "Games",        tags: ["Games"],                                  tagColor: "#2750b6", cardBg: "#2750b6", dept: "Engineering", mission: false, small: false, url: "https://discord.com/",                               description: "Own the voice and video infrastructure for 600M+ registered users. Discord's engineering is respected in the industry and the culture is real." },
-  { id: "colonist-fe",    company: "Colonist.io",  role: "Senior Frontend Engineer, Game UI",         location: "Remote",             remote: true,  tag: "Games",        tags: ["Games"],                                  tagColor: "#2750b6", cardBg: "#f4ece0", dept: "Engineering", mission: false, small: true,  url: "https://jobs.ashbyhq.com/colonist/",                 description: "Build game UI for a Settlers of Catan-inspired web game with a passionate community. Small team, fully remote, and you'll know your players." },
+  { id: "nyt-fe",         company: "NYT Games",    role: "Senior Frontend Engineer, Puzzles",         location: "New York, NY",       remote: false, tag: "Games",      tags: ["Puzzles","Indie Games"],                                tagColor: "#2750b6", cardBg: "#181818", dept: "Engineering", mission: false, small: false, url: "https://job-boards.greenhouse.io/thenewyorktimes",   description: "Ship the frontend for Wordle, Connections, Spelling Bee, and the Crossword. NYT Games has some of the most engaged users in tech." },
+  { id: "roblox-swe",     company: "Roblox",       role: "Senior Software Engineer, Platform",        location: "San Mateo, CA",      remote: false, tag: "Games",      tags: ["Indie Games","Puzzles"],                                tagColor: "#2750b6", cardBg: "#e8632c", dept: "Engineering", mission: false, small: false, url: "https://www.roblox.com/",                            description: "Scale the platform where millions of kids create and play games every day. Roblox's technical challenges are genuinely hard and interesting." },
+  { id: "discord-staff",  company: "Discord",      role: "Staff Engineer, Voice & Video",             location: "San Francisco, CA",  remote: true,  tag: "Games",      tags: ["Indie Games","Tabletop RPGs","Fantasy Sports"],         tagColor: "#2750b6", cardBg: "#2750b6", dept: "Engineering", mission: false, small: false, url: "https://discord.com/",                               description: "Own the voice and video infrastructure for 600M+ registered users. Discord's engineering is respected in the industry and the culture is real." },
+  { id: "colonist-fe",    company: "Colonist.io",  role: "Senior Frontend Engineer, Game UI",         location: "Remote",             remote: true,  tag: "Games",      tags: ["Tabletop RPGs","Indie Games","Puzzles"],                tagColor: "#2750b6", cardBg: "#f4ece0", dept: "Engineering", mission: false, small: true,  url: "https://jobs.ashbyhq.com/colonist/",                 description: "Build game UI for a Settlers of Catan-inspired web game with a passionate community. Small team, fully remote, and you'll know your players." },
   // Sports
-  { id: "seatgeek-pd",    company: "SeatGeek",     role: "Product Designer, Consumer",                location: "New York, NY",       remote: false, tag: "Sports",       tags: ["Sports","Music"],                          tagColor: "#2750b6", cardBg: "#f4ece0", dept: "Design",      mission: false, small: false, url: "https://seatgeek.com/",                              description: "Design the ticket-buying experience for sports, concerts, and live events. SeatGeek is the designer-friendly alternative in a category that usually isn't." },
-  { id: "underdog-be",    company: "Underdog",     role: "Senior Backend Engineer, Fantasy Sports",   location: "New York, NY",       remote: true,  tag: "Sports",       tags: ["Sports","Gambling"],                       tagColor: "#2750b6", cardBg: "#2750b6", dept: "Engineering", mission: false, small: false, url: "https://job-boards.greenhouse.io/underdogfantasy",   description: "Build the backend for a fast-growing fantasy sports platform. Underdog is one of the more technically interesting companies in the sports space." },
-  { id: "fanatics-pd",    company: "Fanatics",     role: "Product Designer, Commerce",                location: "Jacksonville, FL",   remote: true,  tag: "Sports",       tags: ["Sports","Fashion"],                        tagColor: "#2750b6", cardBg: "#181818", dept: "Design",      mission: false, small: false, url: "https://job-boards.greenhouse.io/fanaticsinc",       description: "Design commerce experiences for the world's largest sports merchandise company. Big scale, interesting personalization problems." },
-  { id: "nike-swe",       company: "Nike",         role: "Senior Software Engineer, Running",         location: "Beaverton, OR",      remote: false, tag: "Sports",       tags: ["Sports","Fitness","Running"],              tagColor: "#2750b6", cardBg: "#181818", dept: "Engineering", mission: false, small: false, url: "https://nike.wd1.myworkdayjobs.com/nke",             description: "Build the running app and training platform for the world's biggest sports brand. Nike Digital is a real engineering org with interesting challenges at scale." },
-  { id: "redbull-pm",     company: "Red Bull",     role: "Product Manager, Digital Media",            location: "Santa Monica, CA",   remote: false, tag: "Sports",       tags: ["Sports","Outdoors"],                       tagColor: "#2750b6", cardBg: "#e8632c", dept: "Product",     mission: false, small: false, url: "https://www.redbull.com/us-en",                      description: "Run digital media products for Red Bull, the brand that invented its own category of sports coverage and has a media empire most companies would kill for." },
+  { id: "seatgeek-pd",    company: "SeatGeek",     role: "Product Designer, Consumer",                location: "New York, NY",       remote: false, tag: "Sports",     tags: ["Sports","Live Music"],                                  tagColor: "#2750b6", cardBg: "#f4ece0", dept: "Design",      mission: false, small: false, url: "https://seatgeek.com/",                              description: "Design the ticket-buying experience for sports, concerts, and live events. SeatGeek is the designer-friendly alternative in a category that usually isn't." },
+  { id: "underdog-be",    company: "Underdog",     role: "Senior Backend Engineer, Fantasy Sports",   location: "New York, NY",       remote: true,  tag: "Sports",     tags: ["Sports","Fantasy Sports"],                              tagColor: "#2750b6", cardBg: "#2750b6", dept: "Engineering", mission: false, small: false, url: "https://job-boards.greenhouse.io/underdogfantasy",   description: "Build the backend for a fast-growing fantasy sports platform. Underdog is one of the more technically interesting companies in the sports space." },
+  { id: "fanatics-pd",    company: "Fanatics",     role: "Product Designer, Commerce",                location: "Jacksonville, FL",   remote: true,  tag: "Sports",     tags: ["Sports","Fashion"],                                     tagColor: "#2750b6", cardBg: "#181818", dept: "Design",      mission: false, small: false, url: "https://job-boards.greenhouse.io/fanaticsinc",       description: "Design commerce experiences for the world's largest sports merchandise company. Big scale, interesting personalization problems." },
+  { id: "nike-swe",       company: "Nike",         role: "Senior Software Engineer, Running",         location: "Beaverton, OR",      remote: false, tag: "Sports",     tags: ["Running","Sports","Fitness"],                           tagColor: "#2750b6", cardBg: "#181818", dept: "Engineering", mission: false, small: false, url: "https://nike.wd1.myworkdayjobs.com/nke",             description: "Build the running app and training platform for the world's biggest sports brand. Nike Digital is a real engineering org with interesting challenges at scale." },
+  { id: "redbull-pm",     company: "Red Bull",     role: "Product Manager, Digital Media",            location: "Santa Monica, CA",   remote: false, tag: "Sports",     tags: ["Sports","Rock Climbing","Surfing","Trail Running"],     tagColor: "#2750b6", cardBg: "#e8632c", dept: "Product",     mission: false, small: false, url: "https://www.redbull.com/us-en",                      description: "Run digital media products for Red Bull, the brand that invented its own category of sports coverage and has a media empire most companies would kill for." },
   // Fitness & Wellness
-  { id: "peloton-android",company: "Peloton",      role: "Android Engineer, Fitness Content",         location: "New York, NY",       remote: true,  tag: "Fitness",      tags: ["Fitness","Biking","Running"],              tagColor: "#e8632c", cardBg: "#e8632c", dept: "Engineering", mission: false, small: false, url: "https://www.onepeloton.com/",                        description: "Build the Android app that streams workouts to millions of connected bikes and treadmills. Peloton's media + hardware combination creates unique engineering challenges." },
-  { id: "whoop-fs",       company: "Whoop",        role: "Full Stack Engineer, Health Analytics",     location: "Boston, MA",         remote: false, tag: "Fitness",      tags: ["Fitness"],                                 tagColor: "#e8632c", cardBg: "#e8632c", dept: "Engineering", mission: false, small: false, url: "https://jobs.lever.co/whoop/",                       description: "Build the health analytics platform behind the wearable that serious athletes obsess over. Small team in Boston doing genuinely interesting health data work." },
-  { id: "wahoo-swe",      company: "Wahoo",        role: "Senior SWE, Training Analytics",            location: "Atlanta, GA",        remote: true,  tag: "Fitness",      tags: ["Fitness","Biking"],                        tagColor: "#e8632c", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: false, url: "https://www.wahoofitness.com/",                      description: "Build training analytics software for cyclists and runners who take their performance seriously. Wahoo is the underdog hardware company doing interesting connected fitness work." },
-  { id: "oura-ios",       company: "Oura",         role: "iOS Engineer, Health Platform",             location: "Oulu, Finland",      remote: true,  tag: "Fitness",      tags: ["Fitness"],                                 tagColor: "#e8632c", cardBg: "#181818", dept: "Engineering", mission: false, small: false, url: "https://job-boards.greenhouse.io/oura",              description: "Build the iOS app for the ring-sized health tracker loved by biohackers and sleep optimizers. Oura is scaling fast and the hardware-software integration is genuinely hard." },
-  { id: "hydrow-swe",     company: "Hydrow",       role: "Senior SWE, Connected Fitness",             location: "Boston, MA",         remote: true,  tag: "Fitness",      tags: ["Fitness","Rowing"],                        tagColor: "#e8632c", cardBg: "#f4ece0", dept: "Engineering", mission: false, small: true,  url: "https://jobs.lever.co/Hydrow/",                      description: "Build the connected fitness experience for the rowing machine trying to become the Peloton of rowing. Small team, real growth story, and a passionate user base." },
-  { id: "calm-be",        company: "Calm",         role: "Backend Engineer, Infrastructure",          location: "Remote",             remote: true,  tag: "Chillin",      tags: ["Chillin"],                                 tagColor: "#e8632c", cardBg: "#2750b6", dept: "Engineering", mission: true,  small: false, url: "https://job-boards.greenhouse.io/calm/",             description: "Build the infrastructure for the mental wellness app used by millions to sleep, meditate, and manage anxiety. Fully remote, mission-driven, and a product you can actually talk about at dinner." },
-  { id: "headspace-ios",  company: "Headspace",    role: "Senior iOS Engineer",                       location: "Los Angeles, CA",    remote: true,  tag: "Chillin",      tags: ["Chillin"],                                 tagColor: "#e8632c", cardBg: "#181818", dept: "Engineering", mission: true,  small: false, url: "https://job-boards.greenhouse.io/hs",                description: "Build iOS features for the meditation and mental health app that has been in the space longer than anyone. Mission-driven LA team with a product that genuinely helps people." },
+  { id: "peloton-android",company: "Peloton",      role: "Android Engineer, Fitness Content",         location: "New York, NY",       remote: true,  tag: "Fitness",    tags: ["Fitness","Cycling","Running"],                          tagColor: "#e8632c", cardBg: "#e8632c", dept: "Engineering", mission: false, small: false, url: "https://www.onepeloton.com/",                        description: "Build the Android app that streams workouts to millions of connected bikes and treadmills. Peloton's media + hardware combination creates unique engineering challenges." },
+  { id: "whoop-fs",       company: "Whoop",        role: "Full Stack Engineer, Health Analytics",     location: "Boston, MA",         remote: false, tag: "Fitness",    tags: ["Fitness","Running"],                                    tagColor: "#e8632c", cardBg: "#e8632c", dept: "Engineering", mission: false, small: false, url: "https://jobs.lever.co/whoop/",                       description: "Build the health analytics platform behind the wearable that serious athletes obsess over. Small team in Boston doing genuinely interesting health data work." },
+  { id: "wahoo-swe",      company: "Wahoo",        role: "Senior SWE, Training Analytics",            location: "Atlanta, GA",        remote: true,  tag: "Fitness",    tags: ["Cycling","Fitness","Running"],                          tagColor: "#e8632c", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: false, url: "https://www.wahoofitness.com/",                      description: "Build training analytics software for cyclists and runners who take their performance seriously. Wahoo is the underdog hardware company doing interesting connected fitness work." },
+  { id: "oura-ios",       company: "Oura",         role: "iOS Engineer, Health Platform",             location: "Oulu, Finland",      remote: true,  tag: "Fitness",    tags: ["Fitness","Yoga"],                                       tagColor: "#e8632c", cardBg: "#181818", dept: "Engineering", mission: false, small: false, url: "https://job-boards.greenhouse.io/oura",              description: "Build the iOS app for the ring-sized health tracker loved by biohackers and sleep optimizers. Oura is scaling fast and the hardware-software integration is genuinely hard." },
+  { id: "hydrow-swe",     company: "Hydrow",       role: "Senior SWE, Connected Fitness",             location: "Boston, MA",         remote: true,  tag: "Fitness",    tags: ["Rowing","Fitness"],                                     tagColor: "#e8632c", cardBg: "#f4ece0", dept: "Engineering", mission: false, small: true,  url: "https://jobs.lever.co/Hydrow/",                      description: "Build the connected fitness experience for the rowing machine trying to become the Peloton of rowing. Small team, real growth story, and a passionate user base." },
+  { id: "calm-be",        company: "Calm",         role: "Backend Engineer, Infrastructure",          location: "Remote",             remote: true,  tag: "Wellness",   tags: ["Yoga","Fitness"],                                       tagColor: "#e8632c", cardBg: "#2750b6", dept: "Engineering", mission: true,  small: false, url: "https://job-boards.greenhouse.io/calm/",             description: "Build the infrastructure for the mental wellness app used by millions to sleep, meditate, and manage anxiety. Fully remote, mission-driven, and a product you can actually talk about at dinner." },
+  { id: "headspace-ios",  company: "Headspace",    role: "Senior iOS Engineer",                       location: "Los Angeles, CA",    remote: true,  tag: "Wellness",   tags: ["Yoga","Fitness"],                                       tagColor: "#e8632c", cardBg: "#181818", dept: "Engineering", mission: true,  small: false, url: "https://job-boards.greenhouse.io/hs",                description: "Build iOS features for the meditation and mental health app that has been in the space longer than anyone. Mission-driven LA team with a product that genuinely helps people." },
   // Food & Drink
-  { id: "beli-fs",        company: "Beli",         role: "Full Stack Engineer",                       location: "San Francisco, CA",  remote: true,  tag: "Food",         tags: ["Food"],                                    tagColor: "#eabc2b", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: true,  url: "https://beli.breezy.hr/",                            description: "Build the restaurant and dish tracking app that serious food people use to remember what they ate and discover what's next. Small SF team with real user love." },
-  { id: "opentable-eng",  company: "OpenTable",    role: "Senior Engineer, Booking Systems",          location: "San Francisco, CA",  remote: true,  tag: "Food",         tags: ["Food"],                                    tagColor: "#eabc2b", cardBg: "#e8632c", dept: "Engineering", mission: false, small: false, url: "https://job-boards.greenhouse.io/opentable",         description: "Build the booking systems that power reservations at thousands of restaurants. OpenTable is a mature product with interesting engineering scale challenges." },
-  { id: "nextglass-fs",   company: "Next Glass",   role: "Full Stack Engineer, Recommendations",      location: "Wilmington, NC",     remote: true,  tag: "Beer",         tags: ["Beer","Food"],                             tagColor: "#eabc2b", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: true,  url: "https://www.nextglass.co/",                          description: "Build the recommendation engine for a beer and wine discovery app. Small team doing interesting taste-preference work that's actually fun to demo at parties." },
+  { id: "beli-fs",        company: "Beli",         role: "Full Stack Engineer",                       location: "San Francisco, CA",  remote: true,  tag: "Food",       tags: ["Cooking","Travel"],                                     tagColor: "#eabc2b", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: true,  url: "https://beli.breezy.hr/",                            description: "Build the restaurant and dish tracking app that serious food people use to remember what they ate and discover what's next. Small SF team with real user love." },
+  { id: "opentable-eng",  company: "OpenTable",    role: "Senior Engineer, Booking Systems",          location: "San Francisco, CA",  remote: true,  tag: "Food",       tags: ["Cooking","Travel"],                                     tagColor: "#eabc2b", cardBg: "#e8632c", dept: "Engineering", mission: false, small: false, url: "https://job-boards.greenhouse.io/opentable",         description: "Build the booking systems that power reservations at thousands of restaurants. OpenTable is a mature product with interesting engineering scale challenges." },
+  { id: "nextglass-fs",   company: "Next Glass",   role: "Full Stack Engineer, Recommendations",      location: "Wilmington, NC",     remote: true,  tag: "Beer",       tags: ["Craft Beer","Natural Wine","Cooking"],                  tagColor: "#eabc2b", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: true,  url: "https://www.nextglass.co/",                          description: "Build the recommendation engine for a beer and wine discovery app. Small team doing interesting taste-preference work that's actually fun to demo at parties." },
   // Language & Travel
-  { id: "duolingo-pm",    company: "Duolingo",     role: "Staff Product Manager, Learning",           location: "Pittsburgh, PA",     remote: false, tag: "Language",     tags: ["Language","Travel"],                       tagColor: "#2750b6", cardBg: "#f4ece0", dept: "Product",     mission: true,  small: false, url: "https://www.duolingo.com/",                          description: "Lead product at the company that's made language learning actually work for 500M+ users. Duolingo's growth story is one of the best in consumer tech and the mission is real." },
+  { id: "duolingo-pm",    company: "Duolingo",     role: "Staff Product Manager, Learning",           location: "Pittsburgh, PA",     remote: false, tag: "Language",   tags: ["Language Learning","Travel"],                           tagColor: "#2750b6", cardBg: "#f4ece0", dept: "Product",     mission: true,  small: false, url: "https://www.duolingo.com/",                          description: "Lead product at the company that's made language learning actually work for 500M+ users. Duolingo's growth story is one of the best in consumer tech and the mission is real." },
   // Animals
-  { id: "chewy-swe",      company: "Chewy",        role: "Senior SWE, Personalization",               location: "Dania Beach, FL",    remote: true,  tag: "Animals",      tags: ["Animals"],                                 tagColor: "#3a8a47", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: false, url: "https://www.chewy.com/",                             description: "Build the personalization systems for the pet supply company that has won over pet owners with its customer obsession. Interesting ML and recommendation work at real scale." },
+  { id: "chewy-swe",      company: "Chewy",        role: "Senior SWE, Personalization",               location: "Dania Beach, FL",    remote: true,  tag: "Animals",    tags: ["Animals"],                                              tagColor: "#3a8a47", cardBg: "#eabc2b", dept: "Engineering", mission: false, small: false, url: "https://www.chewy.com/",                             description: "Build the personalization systems for the pet supply company that has won over pet owners with its customer obsession. Interesting ML and recommendation work at real scale." },
 ];
 
 const FEATURED_JOBS = ALL_JOBS.filter(j =>
@@ -303,13 +326,17 @@ const FEATURED_JOBS = ALL_JOBS.filter(j =>
 );
 
 // ─── BROWSE JOBS ───────────────────────────────────────────
-function BrowseJobs({ onJobClick }) {
-  const [activeInterests, setActiveInterests] = useState([]);
+function BrowseJobs({ onJobClick, initialInterests }) {
+  const [activeInterests, setActiveInterests] = useState(() => initialInterests || []);
   const [selectedSkills,  setSelectedSkills]  = useState(new Set());
   const [activePrefs,     setActivePrefs]     = useState([]);
-  const [searching,       setSearching]       = useState(false);
+  const [roleInput,       setRoleInput]       = useState("");
+  const [locationPref,    setLocationPref]    = useState({ type: "any", city: "" });
+  const [liveResults,     setLiveResults]     = useState(null);
+  const [liveLoading,     setLiveLoading]     = useState(false);
+  const [liveError,       setLiveError]       = useState(null);
 
-  const allInterests = [...new Set(ALL_JOBS.flatMap(j => j.tags))].sort();
+  const allInterests = INTEREST_POOL.map(i => i.name);
 
   const skillsAC = useAC({
     pool: SKILL_POOL,
@@ -337,10 +364,25 @@ function BrowseJobs({ onJobClick }) {
 
   const hasFilters = activeInterests.length || selectedSkills.size || activePrefs.length;
 
-  const handleSearch = () => {
-    setSearching(true);
-    setTimeout(() => setSearching(false), 700);
-    // TODO: call JSearch API with activeInterests + selectedSkills + activePrefs
+  const handleSearch = async () => {
+    const role = roleInput.trim() || [...selectedSkills].slice(0, 2).join(" ");
+    if (!role) { setLiveError("Enter a role or select some skills first."); return; }
+    const locationStr = locationPref.type === "remote" ? "remote"
+      : locationPref.type === "city" ? locationPref.city.trim()
+      : "";
+    const query = [role, locationStr].filter(Boolean).join(" ");
+    setLiveLoading(true);
+    setLiveError(null);
+    setLiveResults(null);
+    const { data, error } = await supabase.functions.invoke("search-jobs", {
+      body: { query, skills: [...selectedSkills], interests: activeInterests },
+    });
+    setLiveLoading(false);
+    if (error || data?.error) {
+      setLiveError(error?.message || data?.error || "Search failed — try again.");
+    } else {
+      setLiveResults(data.jobs ?? []);
+    }
   };
 
   const sectionLabel = {
@@ -350,7 +392,7 @@ function BrowseJobs({ onJobClick }) {
 
   const interestPill = (interest) => {
     const isActive = activeInterests.includes(interest);
-    const color = INTEREST_COLORS[interest] || "var(--ink-4)";
+    const color = interestHex(interest);
     return (
       <button key={interest}
         onClick={() => toggleArr(activeInterests, setActiveInterests, interest)}
@@ -402,7 +444,7 @@ function BrowseJobs({ onJobClick }) {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <span style={{ fontFamily: "var(--ff-mono)", fontSize: 11, letterSpacing: "0.08em", color: "var(--ink-4)" }}>
-            {filtered.length} of {ALL_JOBS.length} curated roles
+            {filtered.length + (liveResults ? liveResults.length : 0)} role{(filtered.length + (liveResults ? liveResults.length : 0)) !== 1 ? "s" : ""}
           </span>
           {hasFilters && (
             <button
@@ -556,42 +598,212 @@ function BrowseJobs({ onJobClick }) {
         </div>
       </div>
 
-      {/* Search button */}
-      <div style={{ marginBottom: 48, paddingBottom: 40, borderBottom: "var(--stroke) solid var(--ink)", display: "flex", alignItems: "center", gap: 16 }}>
-        <button
-          onClick={handleSearch}
-          style={{ ...btnPrimary, padding: "13px 32px", fontSize: 14, boxShadow: "4px 4px 0 var(--federal)", opacity: searching ? 0.7 : 1 }}
-          onMouseEnter={e => { if (!searching) { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "5px 5px 0 var(--federal)"; }}}
-          onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "4px 4px 0 var(--federal)"; }}
-          disabled={searching}
-        >
-          {searching ? "Searching…" : <>Search roles <ArrowRight /></>}
-        </button>
-        <span style={{ fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-4)" }}>
-          {filtered.length} match · JSearch coming soon
-        </span>
+      {/* Role + Location */}
+      <div style={{ marginBottom: 28 }}>
+        <span style={sectionLabel}>Role & location</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <input
+            value={roleInput}
+            onChange={e => setRoleInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleSearch()}
+            placeholder="Your role or job title — e.g. Product Designer, iOS Engineer…"
+            style={{
+              border: "var(--stroke) solid var(--ink)", padding: "13px 18px",
+              background: "var(--paper)", fontFamily: "var(--ff-display)",
+              fontSize: 14, color: "var(--ink)", outline: "none",
+            }}
+            onFocus={e => e.currentTarget.style.boxShadow = "4px 4px 0 var(--federal)"}
+            onBlur={e => e.currentTarget.style.boxShadow = "none"}
+          />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            {[
+              { value: "remote", label: "Remote only" },
+              { value: "any",    label: "Don't care" },
+              { value: "city",   label: "Specific city" },
+            ].map(({ value, label }) => (
+              <button key={value}
+                onClick={() => setLocationPref(p => ({ ...p, type: value }))}
+                style={{
+                  padding: "7px 18px", borderRadius: 999,
+                  border: "var(--stroke) solid var(--ink)",
+                  background: locationPref.type === value ? "var(--ink)" : "var(--paper)",
+                  color: locationPref.type === value ? "var(--paper)" : "var(--ink)",
+                  fontFamily: "var(--ff-display)", fontWeight: 600, fontSize: 13,
+                  letterSpacing: "-0.01em", cursor: "pointer",
+                  transition: "background 0.1s, color 0.1s",
+                }}
+              >{label}</button>
+            ))}
+            {locationPref.type === "city" && (
+              <input
+                value={locationPref.city}
+                onChange={e => setLocationPref(p => ({ ...p, city: e.target.value }))}
+                onKeyDown={e => e.key === "Enter" && handleSearch()}
+                placeholder="City — e.g. San Francisco"
+                style={{
+                  flex: 1, minWidth: 160,
+                  border: "var(--stroke) solid var(--ink)", padding: "7px 14px",
+                  background: "var(--paper)", fontFamily: "var(--ff-display)",
+                  fontSize: 13, color: "var(--ink)", outline: "none",
+                  borderRadius: 999,
+                }}
+              />
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Results */}
-      {filtered.length === 0 ? (
-        <div style={{
-          textAlign: "center", padding: "80px 0",
-          fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 18, color: "var(--ink-3)",
-        }}>
-          No roles match those filters — try broadening your search.
-        </div>
-      ) : (
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          border: "var(--stroke) solid var(--ink)",
-          background: "var(--ink)",
-          gap: "1.5px",
-        }}>
-          {filtered.map((job, i) => <JobCard key={job.id} job={job} index={i} onJobClick={onJobClick} />)}
+      {/* Search button */}
+      <div style={{ marginBottom: 48, paddingBottom: 40, borderBottom: "var(--stroke) solid var(--ink)", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+        <button
+          onClick={handleSearch}
+          style={{ ...btnPrimary, padding: "13px 32px", fontSize: 14, boxShadow: "4px 4px 0 var(--federal)", opacity: liveLoading ? 0.7 : 1 }}
+          onMouseEnter={e => { if (!liveLoading) { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "5px 5px 0 var(--federal)"; }}}
+          onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "4px 4px 0 var(--federal)"; }}
+          disabled={liveLoading}
+        >
+          {liveLoading ? "Searching…" : <>Search live jobs <ArrowRight /></>}
+        </button>
+        <span style={{ fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-4)" }}>
+          {filtered.length} curated
+        </span>
+        {liveError && (
+          <span style={{ fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.06em", color: "var(--persimmon)" }}>
+            ⚠ {liveError}
+          </span>
+        )}
+      </div>
+
+      {/* Unified results grid */}
+      {liveLoading && (
+        <div style={{ textAlign: "center", padding: "60px 0", fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 16, color: "var(--ink-3)" }}>
+          Searching live jobs…
         </div>
       )}
+      {(() => {
+        const allResults = [
+          ...(liveResults ?? []).map(j => ({ ...j, _live: true })),
+          ...filtered.map(j => ({ ...j, _live: false })),
+        ];
+        if (allResults.length === 0) {
+          return (
+            <div style={{
+              textAlign: "center", padding: "80px 0",
+              fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 18, color: "var(--ink-3)",
+            }}>
+              No roles match those filters — try broadening your search.
+            </div>
+          );
+        }
+        return (
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+            border: "var(--stroke) solid var(--ink)",
+            background: "var(--ink)",
+            gap: "1.5px",
+          }}>
+            {allResults.map((job, i) =>
+              job._live
+                ? <LiveJobCard key={job.id} job={job} />
+                : <JobCard key={job.id} job={job} index={i} onJobClick={onJobClick} />
+            )}
+          </div>
+        );
+      })()}
     </div>
+  );
+}
+
+function LiveJobCard({ job }) {
+  const [hovered, setHovered] = useState(false);
+  const firstTagEntry = INTEREST_POOL.find(i => job.tags.includes(i.name));
+  const accentColor = firstTagEntry ? COLORS[firstTagEntry.color] : "var(--ink-4)";
+
+  return (
+    <a
+      href={job.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        background: "var(--paper)", display: "block", textDecoration: "none",
+        color: "var(--ink)", position: "relative", overflow: "hidden",
+        transform: hovered ? "translate(-2px, -2px)" : "none",
+        boxShadow: hovered ? "3px 3px 0 var(--ink)" : "none",
+        zIndex: hovered ? 2 : 1,
+        transition: "transform 0.1s, box-shadow 0.1s",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* card top */}
+      <div style={{
+        padding: "18px 20px 16px",
+        borderBottom: "var(--stroke) solid var(--ink)",
+        background: "var(--paper-2)",
+        position: "relative", overflow: "hidden", minHeight: 100,
+      }}>
+        <div style={{
+          position: "absolute", width: 110, height: 110, borderRadius: "50%",
+          right: -24, top: -28, background: accentColor,
+          mixBlendMode: "multiply", opacity: 0.5,
+        }} />
+        {/* Live badge */}
+        <div style={{
+          position: "absolute", top: 12, right: 12,
+          fontFamily: "var(--ff-mono)", fontSize: 8, letterSpacing: "0.14em",
+          textTransform: "uppercase", padding: "3px 8px",
+          border: "1px solid var(--ink)", background: "var(--paper)",
+          color: "var(--ink)", zIndex: 2,
+        }}>Live</div>
+        <div style={{
+          fontFamily: "var(--ff-mono)", fontSize: 14, fontWeight: 500,
+          letterSpacing: "0.12em", textTransform: "uppercase",
+          color: "var(--ink-2)", marginBottom: 4, position: "relative", zIndex: 1, opacity: 0.85,
+        }}>
+          {job.company}
+        </div>
+        <div style={{
+          fontFamily: "var(--ff-display)", fontWeight: 600, fontSize: 17,
+          lineHeight: 1.15, letterSpacing: "-0.02em",
+          color: "var(--ink)", position: "relative", zIndex: 1,
+        }}>
+          {job.title}
+        </div>
+      </div>
+
+      {/* card body */}
+      <div style={{ padding: "14px 20px 18px", display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 14, color: "var(--ink-2)" }}>
+          {job.location}
+        </div>
+        {job.tags.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {job.tags.map(tag => {
+              const tagEntry = INTEREST_POOL.find(i => i.name === tag);
+              const tagColor = tagEntry ? COLORS[tagEntry.color] : "var(--ink-4)";
+              return (
+                <span key={tag} style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "3px 10px 3px 6px", border: "1px solid var(--ink)",
+                  borderRadius: 999, fontFamily: "var(--ff-display)", fontSize: 11,
+                  fontWeight: 600, letterSpacing: "0.04em",
+                  color: "var(--ink)", background: "var(--paper)",
+                }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: tagColor, flexShrink: 0 }} />
+                  {tag}
+                </span>
+              );
+            })}
+          </div>
+        )}
+        {hovered && (
+          <div style={{ marginTop: 4, fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--federal)" }}>
+            Apply ↗
+          </div>
+        )}
+      </div>
+    </a>
   );
 }
 
@@ -1212,7 +1424,7 @@ function JobView({ job, onBack }) {
               fontFamily: "var(--ff-display)", fontWeight: 600, fontSize: 12,
               letterSpacing: "-0.01em", color: "var(--ink)",
             }}>
-              <span style={{ width: 12, height: 12, borderRadius: "50%", background: INTEREST_COLORS[t] || "var(--ink-4)", flexShrink: 0 }} />
+              <span style={{ width: 12, height: 12, borderRadius: "50%", background: interestHex(t), flexShrink: 0 }} />
               {t}
             </span>
           ))}
@@ -1286,6 +1498,9 @@ export default function App() {
   const [page, setPage] = useState("home");
   const [profileScreen, setProfileScreen] = useState("form");
   const [selectedJob, setSelectedJob] = useState(null);
+  const [user, setUser] = useState(null);
+  const [profileData, setProfileData] = useState(null);
+  const [browseInitialInterests, setBrowseInitialInterests] = useState(null);
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -1294,7 +1509,93 @@ export default function App() {
       const job = ALL_JOBS.find(j => j.id === id);
       if (job) setSelectedJob(job);
     }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  // load profile data when user changes
+  useEffect(() => {
+    if (!user) { setProfileData(null); return; }
+    async function loadProfile() {
+      const [{ data: profileRow }, { data: skillRows }, { data: interestRows }] = await Promise.all([
+        supabase.from("profiles").select("current_title, location_pref").eq("id", user.id).single(),
+        supabase.from("profile_skills").select("skills(name)").eq("profile_id", user.id),
+        supabase.from("profile_interests").select("interests(name)").eq("profile_id", user.id),
+      ]);
+      const skills = skillRows?.map(r => r.skills?.name).filter(Boolean) || [];
+      const interests = interestRows?.map(r => r.interests?.name).filter(Boolean) || [];
+      const currentRole = profileRow?.current_title || '';
+      const locStr = profileRow?.location_pref || 'any';
+      const locationPref = locStr === 'remote'
+        ? { type: 'remote', city: '' }
+        : locStr === 'any' || !locStr
+        ? { type: 'any', city: '' }
+        : { type: 'city', city: locStr };
+      setProfileData({ skills, interests, currentRole, locationPref });
+    }
+    loadProfile();
+  }, [user]);
+
+  const goToProfile = () => {
+    setPage("profile");
+    setProfileScreen(profileData?.skills?.length || profileData?.interests?.length ? "profile" : "form");
+  };
+
+  const handleSignIn = () => {
+    supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+  };
+
+  const handleSignOut = () => supabase.auth.signOut();
+
+  const handleSaveProfile = async ({ skills, interests, prefs, currentRole, locationPref }) => {
+    if (!user) return;
+
+    const locationStr = locationPref?.type === 'remote' ? 'remote'
+      : locationPref?.type === 'city' ? (locationPref.city || '')
+      : 'any';
+
+    await supabase.from("profiles").upsert({
+      id: user.id,
+      current_title: currentRole || null,
+      location_pref: locationStr,
+      remote_pref:   prefs.remote  !== "no",
+      mission_pref:  prefs.mission === "yes",
+      small_pref:    prefs.small   === "yes",
+      updated_at:    new Date().toISOString(),
+    });
+
+    const [{ data: skillRows }, { data: interestRows }] = await Promise.all([
+      supabase.from("skills").select("id, name").in("name", skills),
+      supabase.from("interests").select("id, name").in("name", interests),
+    ]);
+
+    await Promise.all([
+      supabase.from("profile_skills").delete().eq("profile_id", user.id),
+      supabase.from("profile_interests").delete().eq("profile_id", user.id),
+    ]);
+
+    await Promise.all([
+      skillRows?.length && supabase.from("profile_skills").insert(
+        skillRows.map(s => ({ profile_id: user.id, skill_id: s.id }))
+      ),
+      interestRows?.length && supabase.from("profile_interests").insert(
+        interestRows.map(i => ({ profile_id: user.id, interest_id: i.id }))
+      ),
+    ]);
+
+    setProfileData({ skills, interests, currentRole, locationPref });
+  };
 
   const openJob = (job) => {
     setSelectedJob(job);
@@ -1308,7 +1609,7 @@ export default function App() {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--paper)" }}>
-      <Nav page={page} setPage={setPage} />
+      <Nav page={page} setPage={(p) => p === "profile" ? goToProfile() : setPage(p)} user={user} onSignIn={handleSignIn} onSignOut={handleSignOut} />
 
       {/* Profile sub-nav — sits sticky below main nav */}
       {!selectedJob && page === "profile" && (
@@ -1367,20 +1668,31 @@ export default function App() {
         <>
           {page === "home" && (
             <>
-              <Hero onNav={setPage} />
+              <Hero onNav={(p) => p === "profile" ? goToProfile() : setPage(p)} />
               <EmailSignup />
               <FeaturedJobs onJobClick={openJob} />
               <SubmitCompany />
             </>
           )}
-          {page === "jobs" && <BrowseJobs onJobClick={openJob} />}
+          {page === "jobs" && <BrowseJobs onJobClick={openJob} initialInterests={browseInitialInterests} />}
           {page === "profile" && (
             <div style={{ "--pb-top-offset": "108px" }}>
               <ProfileBuilder
+                key={user?.id + (profileData ? JSON.stringify(profileData) : '')}
                 noTopNav
                 screen={profileScreen}
                 setScreen={setProfileScreen}
                 onBack={() => setPage("home")}
+                user={user}
+                onSave={handleSaveProfile}
+                initialSkills={profileData?.skills}
+                initialInterests={profileData?.interests}
+                initialCurrentRole={profileData?.currentRole}
+                initialLocationPref={profileData?.locationPref}
+                onSearchJobs={(interests) => {
+                  setBrowseInitialInterests(interests);
+                  setPage("jobs");
+                }}
               />
             </div>
           )}
