@@ -97,30 +97,35 @@ interface JSearchJob {
 }
 
 // ─── TAG JOB against only the provided skills + interests ─────
+// Skills: search title + description (role titles name the skill explicitly)
+// Interests: search description only (company culture lives in the body, not the title)
 function tagJob(
   title: string,
   description: string,
   skills: string[],
   interests: string[]
-): string[] {
-  const text = `${title} ${description}`.toLowerCase();
+): { tags: string[]; interestCount: number } {
+  const fullText = `${title} ${description}`.toLowerCase();
+  const descText = description.toLowerCase();
   const tags: string[] = [];
+  let interestCount = 0;
 
   for (const skill of skills) {
     const keywords = SKILL_KEYWORDS[skill];
-    if (keywords && keywords.some((kw) => text.includes(kw))) {
+    if (keywords && keywords.some((kw) => fullText.includes(kw))) {
       tags.push(skill);
     }
   }
 
   for (const interest of interests) {
     const keywords = INTEREST_KEYWORDS[interest];
-    if (keywords && keywords.some((kw) => text.includes(kw))) {
+    if (keywords && keywords.some((kw) => descText.includes(kw))) {
       tags.push(interest);
+      interestCount++;
     }
   }
 
-  return tags;
+  return { tags, interestCount };
 }
 
 // ─── HANDLER ──────────────────────────────────────────────────
@@ -190,7 +195,7 @@ Deno.serve(async (req: Request) => {
 
   const jobs = raw
     .map((j) => {
-      const tags = tagJob(j.job_title, j.job_description ?? "", skills, interests);
+      const { tags, interestCount } = tagJob(j.job_title, j.job_description ?? "", skills, interests);
       const location = j.job_is_remote
         ? "Remote"
         : [j.job_city, j.job_state].filter(Boolean).join(", ") || j.job_country || "Unknown";
@@ -205,11 +210,12 @@ Deno.serve(async (req: Request) => {
         description: (j.job_description ?? "").slice(0, 500).trim(),
         tags,
         matchCount: tags.length,
+        interestCount,
         source: "live" as const,
       };
     })
-    // If skills/interests were provided, only keep jobs with ≥1 match
-    .filter((j) => !hasFilters || j.matchCount > 0)
+    // Must have ≥1 interest match — pure skill matches don't qualify
+    .filter((j) => !hasFilters || j.interestCount > 0)
     .sort((a, b) => b.matchCount - a.matchCount)
     .slice(0, 12);
 

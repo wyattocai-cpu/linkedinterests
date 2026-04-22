@@ -444,7 +444,7 @@ function BrowseJobs({ onJobClick, initialInterests }) {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <span style={{ fontFamily: "var(--ff-mono)", fontSize: 11, letterSpacing: "0.08em", color: "var(--ink-4)" }}>
-            {filtered.length} of {ALL_JOBS.length} curated roles
+            {filtered.length + (liveResults ? liveResults.length : 0)} role{(filtered.length + (liveResults ? liveResults.length : 0)) !== 1 ? "s" : ""}
           </span>
           {hasFilters && (
             <button
@@ -665,7 +665,7 @@ function BrowseJobs({ onJobClick, initialInterests }) {
           {liveLoading ? "Searching…" : <>Search live jobs <ArrowRight /></>}
         </button>
         <span style={{ fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-4)" }}>
-          {filtered.length} curated match{filtered.length !== 1 ? "es" : ""}
+          {filtered.length} curated
         </span>
         {liveError && (
           <span style={{ fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.06em", color: "var(--persimmon)" }}>
@@ -674,19 +674,28 @@ function BrowseJobs({ onJobClick, initialInterests }) {
         )}
       </div>
 
-      {/* Curated results */}
-      <div style={{ marginBottom: liveResults ? 64 : 0 }}>
-        <span style={{ ...sectionLabel, marginBottom: 20 }}>
-          — {filtered.length} curated role{filtered.length !== 1 ? "s" : ""}
-        </span>
-        {filtered.length === 0 ? (
-          <div style={{
-            textAlign: "center", padding: "80px 0",
-            fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 18, color: "var(--ink-3)",
-          }}>
-            No curated roles match those filters — try broadening your search.
-          </div>
-        ) : (
+      {/* Unified results grid */}
+      {liveLoading && (
+        <div style={{ textAlign: "center", padding: "60px 0", fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 16, color: "var(--ink-3)" }}>
+          Searching live jobs…
+        </div>
+      )}
+      {(() => {
+        const allResults = [
+          ...(liveResults ?? []).map(j => ({ ...j, _live: true })),
+          ...filtered.map(j => ({ ...j, _live: false })),
+        ];
+        if (allResults.length === 0) {
+          return (
+            <div style={{
+              textAlign: "center", padding: "80px 0",
+              fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 18, color: "var(--ink-3)",
+            }}>
+              No roles match those filters — try broadening your search.
+            </div>
+          );
+        }
+        return (
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
@@ -694,42 +703,14 @@ function BrowseJobs({ onJobClick, initialInterests }) {
             background: "var(--ink)",
             gap: "1.5px",
           }}>
-            {filtered.map((job, i) => <JobCard key={job.id} job={job} index={i} onJobClick={onJobClick} />)}
+            {allResults.map((job, i) =>
+              job._live
+                ? <LiveJobCard key={job.id} job={job} />
+                : <JobCard key={job.id} job={job} index={i} onJobClick={onJobClick} />
+            )}
           </div>
-        )}
-      </div>
-
-      {/* Live results */}
-      {liveLoading && (
-        <div style={{ textAlign: "center", padding: "60px 0", fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 16, color: "var(--ink-3)" }}>
-          Searching live jobs…
-        </div>
-      )}
-      {liveResults && (
-        <div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginBottom: 20, paddingTop: 48, borderTop: "var(--stroke) solid var(--ink)" }}>
-            <span style={{ ...sectionLabel, margin: 0 }}>— {liveResults.length} live result{liveResults.length !== 1 ? "s" : ""}</span>
-            <span style={{ fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.08em", color: "var(--ink-4)" }}>
-              via JSearch · tagged by Fieldwork
-            </span>
-          </div>
-          {liveResults.length === 0 ? (
-            <div style={{ padding: "48px 0", fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 16, color: "var(--ink-3)" }}>
-              No results passed the Fieldwork filter — try different keywords or interests.
-            </div>
-          ) : (
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-              border: "var(--stroke) solid var(--ink)",
-              background: "var(--ink)",
-              gap: "1.5px",
-            }}>
-              {liveResults.map(job => <LiveJobCard key={job.id} job={job} />)}
-            </div>
-          )}
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
