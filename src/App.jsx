@@ -330,7 +330,10 @@ function BrowseJobs({ onJobClick, initialInterests }) {
   const [activeInterests, setActiveInterests] = useState(() => initialInterests || []);
   const [selectedSkills,  setSelectedSkills]  = useState(new Set());
   const [activePrefs,     setActivePrefs]     = useState([]);
-  const [searching,       setSearching]       = useState(false);
+  const [roleInput,       setRoleInput]       = useState("");
+  const [liveResults,     setLiveResults]     = useState(null);
+  const [liveLoading,     setLiveLoading]     = useState(false);
+  const [liveError,       setLiveError]       = useState(null);
 
   const allInterests = INTEREST_POOL.map(i => i.name);
 
@@ -360,10 +363,20 @@ function BrowseJobs({ onJobClick, initialInterests }) {
 
   const hasFilters = activeInterests.length || selectedSkills.size || activePrefs.length;
 
-  const handleSearch = () => {
-    setSearching(true);
-    setTimeout(() => setSearching(false), 700);
-    // TODO: call JSearch API with activeInterests + selectedSkills + activePrefs
+  const handleSearch = async () => {
+    setLiveLoading(true);
+    setLiveError(null);
+    setLiveResults(null);
+    const query = roleInput.trim() || [...selectedSkills].slice(0, 2).join(" ") || "software engineer";
+    const { data, error } = await supabase.functions.invoke("search-jobs", {
+      body: { query, interests: activeInterests },
+    });
+    setLiveLoading(false);
+    if (error || data?.error) {
+      setLiveError(error?.message || data?.error || "Search failed — try again.");
+    } else {
+      setLiveResults(data.jobs ?? []);
+    }
   };
 
   const sectionLabel = {
@@ -579,42 +592,196 @@ function BrowseJobs({ onJobClick, initialInterests }) {
         </div>
       </div>
 
-      {/* Search button */}
-      <div style={{ marginBottom: 48, paddingBottom: 40, borderBottom: "var(--stroke) solid var(--ink)", display: "flex", alignItems: "center", gap: 16 }}>
-        <button
-          onClick={handleSearch}
-          style={{ ...btnPrimary, padding: "13px 32px", fontSize: 14, boxShadow: "4px 4px 0 var(--federal)", opacity: searching ? 0.7 : 1 }}
-          onMouseEnter={e => { if (!searching) { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "5px 5px 0 var(--federal)"; }}}
-          onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "4px 4px 0 var(--federal)"; }}
-          disabled={searching}
-        >
-          {searching ? "Searching…" : <>Search roles <ArrowRight /></>}
-        </button>
-        <span style={{ fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-4)" }}>
-          {filtered.length} match · JSearch coming soon
-        </span>
+      {/* Search bar + button */}
+      <div style={{ marginBottom: 48, paddingBottom: 40, borderBottom: "var(--stroke) solid var(--ink)" }}>
+        <span style={sectionLabel}>Search live jobs</span>
+        <div style={{ display: "flex", gap: 0, marginBottom: 16 }}>
+          <input
+            value={roleInput}
+            onChange={e => setRoleInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleSearch()}
+            placeholder="Role or title — e.g. Product Designer, iOS Engineer…"
+            style={{
+              flex: 1, border: "var(--stroke) solid var(--ink)", borderRight: "none",
+              padding: "13px 18px", background: "var(--paper)",
+              fontFamily: "var(--ff-display)", fontSize: 14, color: "var(--ink)",
+              outline: "none",
+            }}
+            onFocus={e => e.currentTarget.style.boxShadow = "inset 0 0 0 1.5px var(--federal)"}
+            onBlur={e => e.currentTarget.style.boxShadow = "none"}
+          />
+          <button
+            onClick={handleSearch}
+            style={{ ...btnPrimary, padding: "13px 32px", fontSize: 14, boxShadow: "none", flexShrink: 0, opacity: liveLoading ? 0.7 : 1 }}
+            onMouseEnter={e => { if (!liveLoading) e.currentTarget.style.background = "var(--federal)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "var(--ink)"; }}
+            disabled={liveLoading}
+          >
+            {liveLoading ? "Searching…" : <>Search live <ArrowRight /></>}
+          </button>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+          <span style={{ fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-4)" }}>
+            {filtered.length} curated match{filtered.length !== 1 ? "es" : ""}
+            {activeInterests.length > 0 && ` · ${activeInterests.length} interest filter${activeInterests.length !== 1 ? "s" : ""} active`}
+          </span>
+          {liveError && (
+            <span style={{ fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.06em", color: "var(--persimmon)" }}>
+              ⚠ {liveError}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Results */}
-      {filtered.length === 0 ? (
-        <div style={{
-          textAlign: "center", padding: "80px 0",
-          fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 18, color: "var(--ink-3)",
-        }}>
-          No roles match those filters — try broadening your search.
+      {/* Curated results */}
+      <div style={{ marginBottom: liveResults ? 64 : 0 }}>
+        <span style={{ ...sectionLabel, marginBottom: 20 }}>
+          — {filtered.length} curated role{filtered.length !== 1 ? "s" : ""}
+        </span>
+        {filtered.length === 0 ? (
+          <div style={{
+            textAlign: "center", padding: "80px 0",
+            fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 18, color: "var(--ink-3)",
+          }}>
+            No curated roles match those filters — try broadening your search.
+          </div>
+        ) : (
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+            border: "var(--stroke) solid var(--ink)",
+            background: "var(--ink)",
+            gap: "1.5px",
+          }}>
+            {filtered.map((job, i) => <JobCard key={job.id} job={job} index={i} onJobClick={onJobClick} />)}
+          </div>
+        )}
+      </div>
+
+      {/* Live results */}
+      {liveLoading && (
+        <div style={{ textAlign: "center", padding: "60px 0", fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 16, color: "var(--ink-3)" }}>
+          Searching live jobs…
         </div>
-      ) : (
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          border: "var(--stroke) solid var(--ink)",
-          background: "var(--ink)",
-          gap: "1.5px",
-        }}>
-          {filtered.map((job, i) => <JobCard key={job.id} job={job} index={i} onJobClick={onJobClick} />)}
+      )}
+      {liveResults && (
+        <div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginBottom: 20, paddingTop: 48, borderTop: "var(--stroke) solid var(--ink)" }}>
+            <span style={{ ...sectionLabel, margin: 0 }}>— {liveResults.length} live result{liveResults.length !== 1 ? "s" : ""}</span>
+            <span style={{ fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.08em", color: "var(--ink-4)" }}>
+              via JSearch · tagged by Fieldwork
+            </span>
+          </div>
+          {liveResults.length === 0 ? (
+            <div style={{ padding: "48px 0", fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 16, color: "var(--ink-3)" }}>
+              No results passed the Fieldwork filter — try different keywords or interests.
+            </div>
+          ) : (
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+              border: "var(--stroke) solid var(--ink)",
+              background: "var(--ink)",
+              gap: "1.5px",
+            }}>
+              {liveResults.map(job => <LiveJobCard key={job.id} job={job} />)}
+            </div>
+          )}
         </div>
       )}
     </div>
+  );
+}
+
+function LiveJobCard({ job }) {
+  const [hovered, setHovered] = useState(false);
+  const firstTagEntry = INTEREST_POOL.find(i => job.tags.includes(i.name));
+  const accentColor = firstTagEntry ? COLORS[firstTagEntry.color] : "var(--ink-4)";
+
+  return (
+    <a
+      href={job.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        background: "var(--paper)", display: "block", textDecoration: "none",
+        color: "var(--ink)", position: "relative", overflow: "hidden",
+        transform: hovered ? "translate(-2px, -2px)" : "none",
+        boxShadow: hovered ? "3px 3px 0 var(--ink)" : "none",
+        zIndex: hovered ? 2 : 1,
+        transition: "transform 0.1s, box-shadow 0.1s",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* card top */}
+      <div style={{
+        padding: "18px 20px 16px",
+        borderBottom: "var(--stroke) solid var(--ink)",
+        background: "var(--paper-2)",
+        position: "relative", overflow: "hidden", minHeight: 100,
+      }}>
+        <div style={{
+          position: "absolute", width: 110, height: 110, borderRadius: "50%",
+          right: -24, top: -28, background: accentColor,
+          mixBlendMode: "multiply", opacity: 0.5,
+        }} />
+        {/* Live badge */}
+        <div style={{
+          position: "absolute", top: 12, right: 12,
+          fontFamily: "var(--ff-mono)", fontSize: 8, letterSpacing: "0.14em",
+          textTransform: "uppercase", padding: "3px 8px",
+          border: "1px solid var(--ink)", background: "var(--paper)",
+          color: "var(--ink)", zIndex: 2,
+        }}>Live</div>
+        <div style={{
+          fontFamily: "var(--ff-mono)", fontSize: 14, fontWeight: 500,
+          letterSpacing: "0.12em", textTransform: "uppercase",
+          color: "var(--ink-2)", marginBottom: 4, position: "relative", zIndex: 1, opacity: 0.85,
+        }}>
+          {job.company}
+        </div>
+        <div style={{
+          fontFamily: "var(--ff-display)", fontWeight: 600, fontSize: 17,
+          lineHeight: 1.15, letterSpacing: "-0.02em",
+          color: "var(--ink)", position: "relative", zIndex: 1,
+        }}>
+          {job.title}
+        </div>
+      </div>
+
+      {/* card body */}
+      <div style={{ padding: "14px 20px 18px", display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ fontFamily: "var(--ff-serif)", fontStyle: "italic", fontSize: 14, color: "var(--ink-2)" }}>
+          {job.location}
+        </div>
+        {job.tags.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {job.tags.map(tag => {
+              const tagEntry = INTEREST_POOL.find(i => i.name === tag);
+              const tagColor = tagEntry ? COLORS[tagEntry.color] : "var(--ink-4)";
+              return (
+                <span key={tag} style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "3px 10px 3px 6px", border: "1px solid var(--ink)",
+                  borderRadius: 999, fontFamily: "var(--ff-display)", fontSize: 11,
+                  fontWeight: 600, letterSpacing: "0.04em",
+                  color: "var(--ink)", background: "var(--paper)",
+                }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: tagColor, flexShrink: 0 }} />
+                  {tag}
+                </span>
+              );
+            })}
+          </div>
+        )}
+        {hovered && (
+          <div style={{ marginTop: 4, fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--federal)" }}>
+            Apply ↗
+          </div>
+        )}
+      </div>
+    </a>
   );
 }
 
