@@ -420,10 +420,12 @@ export function useAC({ pool, filterFn }) {
 }
 
 /* ─── PROFILE BUILDER ───────────────────────────────────────── */
-export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, setScreen: setScreenProp, user, onSave, initialSkills, initialInterests, onSearchJobs }) {
+export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, setScreen: setScreenProp, user, onSave, initialSkills, initialInterests, initialCurrentRole, initialLocationPref, onSearchJobs }) {
   const [screenLocal, setScreenLocal] = useState('form')
   const screen = screenProp !== undefined ? screenProp : screenLocal
   const setScreen = setScreenProp !== undefined ? setScreenProp : setScreenLocal
+  const [currentRole, setCurrentRole] = useState(initialCurrentRole || '')
+  const [locationPref, setLocationPref] = useState(initialLocationPref || { type: 'any', city: '' })
   const [skills, setSkills] = useState(() => initialSkills ? new Set(initialSkills) : new Set())
   const [interests, setInterests] = useState(() => {
     if (initialInterests) {
@@ -474,6 +476,8 @@ export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, s
       skills: [...skills],
       interests: [...interests.keys()],
       prefs: ynState,
+      currentRole,
+      locationPref,
     })
     setSaving(false)
     setSaved(true)
@@ -575,10 +579,76 @@ export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, s
             </div>
           </div>
 
-          {/* Q2: Skills */}
+          {/* Q2: Role + Location */}
           <div className="q-block">
             <div className="q-num-wrap">
               <span className="q-num">— 02</span>
+              <div className="q-label">What's your <em>current role?</em></div>
+              <div className="q-hint">Used to search live jobs. E.g. "iOS Engineer", "Product Designer".</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <input
+                value={currentRole}
+                onChange={e => setCurrentRole(e.target.value)}
+                placeholder="e.g. iOS Engineer, Product Designer, Data Scientist…"
+                style={{
+                  border: 'var(--stroke) solid var(--ink)', padding: '13px 16px',
+                  background: 'var(--paper)', fontFamily: 'var(--ff-display)',
+                  fontSize: 14, color: 'var(--ink)', outline: 'none', width: '100%',
+                }}
+                onFocus={e => e.currentTarget.style.boxShadow = '4px 4px 0 var(--federal)'}
+                onBlur={e => e.currentTarget.style.boxShadow = 'none'}
+              />
+              <div>
+                <div style={{ fontFamily: 'var(--ff-mono)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 10 }}>
+                  Location preference
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {[
+                    { value: 'remote', label: 'Remote only' },
+                    { value: 'any',    label: "Don't care" },
+                    { value: 'city',   label: 'Specific city' },
+                  ].map(({ value, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => setLocationPref(p => ({ ...p, type: value }))}
+                      style={{
+                        padding: '7px 18px', borderRadius: 999,
+                        border: 'var(--stroke) solid var(--ink)',
+                        background: locationPref.type === value ? 'var(--ink)' : 'var(--paper)',
+                        color: locationPref.type === value ? 'var(--paper)' : 'var(--ink)',
+                        fontFamily: 'var(--ff-display)', fontWeight: 600, fontSize: 13,
+                        letterSpacing: '-0.01em', cursor: 'pointer',
+                        transition: 'background 0.1s, color 0.1s',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {locationPref.type === 'city' && (
+                  <input
+                    value={locationPref.city}
+                    onChange={e => setLocationPref(p => ({ ...p, city: e.target.value }))}
+                    placeholder="City name — e.g. San Francisco, New York…"
+                    style={{
+                      marginTop: 12, width: '100%',
+                      border: 'var(--stroke) solid var(--ink)', padding: '11px 16px',
+                      background: 'var(--paper)', fontFamily: 'var(--ff-display)',
+                      fontSize: 14, color: 'var(--ink)', outline: 'none',
+                    }}
+                    onFocus={e => e.currentTarget.style.boxShadow = '4px 4px 0 var(--federal)'}
+                    onBlur={e => e.currentTarget.style.boxShadow = 'none'}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Q3: Skills */}
+          <div className="q-block">
+            <div className="q-num-wrap">
+              <span className="q-num">— 03</span>
               <div className="q-label">What can you <em>do?</em></div>
               <div className="q-hint">Your skills, tools, and disciplines. Aim for 5–12.</div>
             </div>
@@ -646,10 +716,10 @@ export default function ProfileBuilder({ onBack, noTopNav, screen: screenProp, s
             </div>
           </div>
 
-          {/* Q3: Interests */}
+          {/* Q4: Interests */}
           <div className="q-block">
             <div className="q-num-wrap">
-              <span className="q-num">— 03</span>
+              <span className="q-num">— 04</span>
               <div className="q-label">What are you <em>into?</em></div>
               <div className="q-hint">The things you'd do on a free Saturday. Be honest — this is the whole point.</div>
             </div>

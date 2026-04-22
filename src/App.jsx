@@ -331,6 +331,7 @@ function BrowseJobs({ onJobClick, initialInterests }) {
   const [selectedSkills,  setSelectedSkills]  = useState(new Set());
   const [activePrefs,     setActivePrefs]     = useState([]);
   const [roleInput,       setRoleInput]       = useState("");
+  const [locationPref,    setLocationPref]    = useState({ type: "any", city: "" });
   const [liveResults,     setLiveResults]     = useState(null);
   const [liveLoading,     setLiveLoading]     = useState(false);
   const [liveError,       setLiveError]       = useState(null);
@@ -364,12 +365,17 @@ function BrowseJobs({ onJobClick, initialInterests }) {
   const hasFilters = activeInterests.length || selectedSkills.size || activePrefs.length;
 
   const handleSearch = async () => {
+    const role = roleInput.trim() || [...selectedSkills].slice(0, 2).join(" ");
+    if (!role) { setLiveError("Enter a role or select some skills first."); return; }
+    const locationStr = locationPref.type === "remote" ? "remote"
+      : locationPref.type === "city" ? locationPref.city.trim()
+      : "";
+    const query = [role, locationStr].filter(Boolean).join(" ");
     setLiveLoading(true);
     setLiveError(null);
     setLiveResults(null);
-    const query = roleInput.trim() || [...selectedSkills].slice(0, 2).join(" ") || "software engineer";
     const { data, error } = await supabase.functions.invoke("search-jobs", {
-      body: { query, interests: activeInterests },
+      body: { query, skills: [...selectedSkills], interests: activeInterests },
     });
     setLiveLoading(false);
     if (error || data?.error) {
@@ -592,45 +598,80 @@ function BrowseJobs({ onJobClick, initialInterests }) {
         </div>
       </div>
 
-      {/* Search bar + button */}
-      <div style={{ marginBottom: 48, paddingBottom: 40, borderBottom: "var(--stroke) solid var(--ink)" }}>
-        <span style={sectionLabel}>Search live jobs</span>
-        <div style={{ display: "flex", gap: 0, marginBottom: 16 }}>
+      {/* Role + Location */}
+      <div style={{ marginBottom: 28 }}>
+        <span style={sectionLabel}>Role & location</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <input
             value={roleInput}
             onChange={e => setRoleInput(e.target.value)}
             onKeyDown={e => e.key === "Enter" && handleSearch()}
-            placeholder="Role or title — e.g. Product Designer, iOS Engineer…"
+            placeholder="Your role or job title — e.g. Product Designer, iOS Engineer…"
             style={{
-              flex: 1, border: "var(--stroke) solid var(--ink)", borderRight: "none",
-              padding: "13px 18px", background: "var(--paper)",
-              fontFamily: "var(--ff-display)", fontSize: 14, color: "var(--ink)",
-              outline: "none",
+              border: "var(--stroke) solid var(--ink)", padding: "13px 18px",
+              background: "var(--paper)", fontFamily: "var(--ff-display)",
+              fontSize: 14, color: "var(--ink)", outline: "none",
             }}
-            onFocus={e => e.currentTarget.style.boxShadow = "inset 0 0 0 1.5px var(--federal)"}
+            onFocus={e => e.currentTarget.style.boxShadow = "4px 4px 0 var(--federal)"}
             onBlur={e => e.currentTarget.style.boxShadow = "none"}
           />
-          <button
-            onClick={handleSearch}
-            style={{ ...btnPrimary, padding: "13px 32px", fontSize: 14, boxShadow: "none", flexShrink: 0, opacity: liveLoading ? 0.7 : 1 }}
-            onMouseEnter={e => { if (!liveLoading) e.currentTarget.style.background = "var(--federal)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "var(--ink)"; }}
-            disabled={liveLoading}
-          >
-            {liveLoading ? "Searching…" : <>Search live <ArrowRight /></>}
-          </button>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            {[
+              { value: "remote", label: "Remote only" },
+              { value: "any",    label: "Don't care" },
+              { value: "city",   label: "Specific city" },
+            ].map(({ value, label }) => (
+              <button key={value}
+                onClick={() => setLocationPref(p => ({ ...p, type: value }))}
+                style={{
+                  padding: "7px 18px", borderRadius: 999,
+                  border: "var(--stroke) solid var(--ink)",
+                  background: locationPref.type === value ? "var(--ink)" : "var(--paper)",
+                  color: locationPref.type === value ? "var(--paper)" : "var(--ink)",
+                  fontFamily: "var(--ff-display)", fontWeight: 600, fontSize: 13,
+                  letterSpacing: "-0.01em", cursor: "pointer",
+                  transition: "background 0.1s, color 0.1s",
+                }}
+              >{label}</button>
+            ))}
+            {locationPref.type === "city" && (
+              <input
+                value={locationPref.city}
+                onChange={e => setLocationPref(p => ({ ...p, city: e.target.value }))}
+                onKeyDown={e => e.key === "Enter" && handleSearch()}
+                placeholder="City — e.g. San Francisco"
+                style={{
+                  flex: 1, minWidth: 160,
+                  border: "var(--stroke) solid var(--ink)", padding: "7px 14px",
+                  background: "var(--paper)", fontFamily: "var(--ff-display)",
+                  fontSize: 13, color: "var(--ink)", outline: "none",
+                  borderRadius: 999,
+                }}
+              />
+            )}
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-          <span style={{ fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-4)" }}>
-            {filtered.length} curated match{filtered.length !== 1 ? "es" : ""}
-            {activeInterests.length > 0 && ` · ${activeInterests.length} interest filter${activeInterests.length !== 1 ? "s" : ""} active`}
+      </div>
+
+      {/* Search button */}
+      <div style={{ marginBottom: 48, paddingBottom: 40, borderBottom: "var(--stroke) solid var(--ink)", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+        <button
+          onClick={handleSearch}
+          style={{ ...btnPrimary, padding: "13px 32px", fontSize: 14, boxShadow: "4px 4px 0 var(--federal)", opacity: liveLoading ? 0.7 : 1 }}
+          onMouseEnter={e => { if (!liveLoading) { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "5px 5px 0 var(--federal)"; }}}
+          onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "4px 4px 0 var(--federal)"; }}
+          disabled={liveLoading}
+        >
+          {liveLoading ? "Searching…" : <>Search live jobs <ArrowRight /></>}
+        </button>
+        <span style={{ fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-4)" }}>
+          {filtered.length} curated match{filtered.length !== 1 ? "es" : ""}
+        </span>
+        {liveError && (
+          <span style={{ fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.06em", color: "var(--persimmon)" }}>
+            ⚠ {liveError}
           </span>
-          {liveError && (
-            <span style={{ fontFamily: "var(--ff-mono)", fontSize: 10, letterSpacing: "0.06em", color: "var(--persimmon)" }}>
-              ⚠ {liveError}
-            </span>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Curated results */}
@@ -1503,13 +1544,21 @@ export default function App() {
   useEffect(() => {
     if (!user) { setProfileData(null); return; }
     async function loadProfile() {
-      const [{ data: skillRows }, { data: interestRows }] = await Promise.all([
+      const [{ data: profileRow }, { data: skillRows }, { data: interestRows }] = await Promise.all([
+        supabase.from("profiles").select("current_title, location_pref").eq("id", user.id).single(),
         supabase.from("profile_skills").select("skills(name)").eq("profile_id", user.id),
         supabase.from("profile_interests").select("interests(name)").eq("profile_id", user.id),
       ]);
       const skills = skillRows?.map(r => r.skills?.name).filter(Boolean) || [];
       const interests = interestRows?.map(r => r.interests?.name).filter(Boolean) || [];
-      setProfileData({ skills, interests });
+      const currentRole = profileRow?.current_title || '';
+      const locStr = profileRow?.location_pref || 'any';
+      const locationPref = locStr === 'remote'
+        ? { type: 'remote', city: '' }
+        : locStr === 'any' || !locStr
+        ? { type: 'any', city: '' }
+        : { type: 'city', city: locStr };
+      setProfileData({ skills, interests, currentRole, locationPref });
     }
     loadProfile();
   }, [user]);
@@ -1528,15 +1577,21 @@ export default function App() {
 
   const handleSignOut = () => supabase.auth.signOut();
 
-  const handleSaveProfile = async ({ skills, interests, prefs }) => {
+  const handleSaveProfile = async ({ skills, interests, prefs, currentRole, locationPref }) => {
     if (!user) return;
+
+    const locationStr = locationPref?.type === 'remote' ? 'remote'
+      : locationPref?.type === 'city' ? (locationPref.city || '')
+      : 'any';
 
     await supabase.from("profiles").upsert({
       id: user.id,
-      remote_pref:  prefs.remote  !== "no",
-      mission_pref: prefs.mission === "yes",
-      small_pref:   prefs.small   === "yes",
-      updated_at:   new Date().toISOString(),
+      current_title: currentRole || null,
+      location_pref: locationStr,
+      remote_pref:   prefs.remote  !== "no",
+      mission_pref:  prefs.mission === "yes",
+      small_pref:    prefs.small   === "yes",
+      updated_at:    new Date().toISOString(),
     });
 
     const [{ data: skillRows }, { data: interestRows }] = await Promise.all([
@@ -1558,7 +1613,7 @@ export default function App() {
       ),
     ]);
 
-    setProfileData({ skills, interests });
+    setProfileData({ skills, interests, currentRole, locationPref });
   };
 
   const openJob = (job) => {
@@ -1651,6 +1706,8 @@ export default function App() {
                 onSave={handleSaveProfile}
                 initialSkills={profileData?.skills}
                 initialInterests={profileData?.interests}
+                initialCurrentRole={profileData?.currentRole}
+                initialLocationPref={profileData?.locationPref}
                 onSearchJobs={(interests) => {
                   setBrowseInitialInterests(interests);
                   setPage("jobs");

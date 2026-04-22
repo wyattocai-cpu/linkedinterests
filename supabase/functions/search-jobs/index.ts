@@ -1,8 +1,44 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-// ─── INTEREST KEYWORD MAP ──────────────────────────────────────
-// Each entry maps an INTEREST_POOL name → keywords to scan for in job descriptions.
-// Match is substring (lowercased), so "cycling" matches "cyclist", "cycleways", etc.
+// ─── SKILL KEYWORDS ───────────────────────────────────────────
+const SKILL_KEYWORDS: Record<string, string[]> = {
+  "Product Design":     ["product design", "product designer", "ux design", "user experience design"],
+  "UX Research":        ["ux research", "user research", "usability testing", "user interviews", "user testing"],
+  "Figma":              ["figma"],
+  "Design Systems":     ["design system", "component library", "design tokens", "design ops"],
+  "Prototyping":        ["prototyping", "prototype", "wireframing", "wireframe", "mockup"],
+  "Motion Design":      ["motion design", "animation", "after effects", "motion graphics", "lottie"],
+  "Brand Identity":     ["brand identity", "branding", "brand design", "visual identity", "brand strategy"],
+  "Illustration":       ["illustration", "illustrator", "visual art", "vector art"],
+  "Type Design":        ["type design", "typography", "typeface", "lettering"],
+  "Python":             ["python"],
+  "JavaScript":         ["javascript", "typescript", " js ", "es6", "node.js", "nodejs"],
+  "React":              ["react", "react.js", "reactjs", "next.js", "nextjs"],
+  "Swift":              ["swift", "swiftui", "ios development", "xcode"],
+  "Node.js":            ["node.js", "nodejs", "express", "fastify"],
+  "SQL":                ["sql", "postgresql", "mysql", "database query", "postgres"],
+  "Data Viz":           ["data visualization", "data viz", "d3.js", "tableau", "looker", "charts"],
+  "Machine Learning":   ["machine learning", "deep learning", "neural network", "llm", "ai/ml", "ml engineer"],
+  "GIS Mapping":        ["gis", "geospatial", "geographic information", "mapbox", "arcgis"],
+  "Ecology":            ["ecology", "ecological", "environmental science", "field ecology"],
+  "Copywriting":        ["copywriting", "ux writing", "content writing", "copy"],
+  "Editorial":          ["editorial", "content editing", "managing editor"],
+  "Content Strategy":   ["content strategy", "content planning", "information architecture"],
+  "Product Management": ["product management", "product manager", " pm ", "roadmap", "product owner"],
+  "Community Building": ["community management", "community building", "community manager"],
+  "Facilitation":       ["facilitation", "design sprint", "workshop"],
+  "Photography":        ["photography", "photo", "camera", "photoshoot"],
+  "Video Editing":      ["video editing", "video production", "premiere", "final cut", "davinci"],
+  "3D Modeling":        ["3d modeling", "blender", "maya", "3d design", "cad"],
+  "Unity":              ["unity", "unity3d", "game engine"],
+  "Marketing":          ["marketing", "growth marketing", "digital marketing", "campaign"],
+  "SEO":                ["seo", "search engine optimization", "organic search"],
+  "Operations":         ["operations", "ops", "process improvement", "program management"],
+  "Finance":            ["finance", "financial planning", "accounting", "fp&a"],
+  "Legal":              ["legal", "compliance", "regulatory", "counsel"],
+};
+
+// ─── INTEREST KEYWORDS ────────────────────────────────────────
 const INTEREST_KEYWORDS: Record<string, string[]> = {
   "Rock Climbing":        ["climbing", "rock climbing", "bouldering", "mountaineer"],
   "Trail Running":        ["trail running", "trail run", "ultramarathon"],
@@ -46,48 +82,6 @@ const INTEREST_KEYWORDS: Record<string, string[]> = {
   "Zine Making":          ["zine", "self-publishing", "print design"],
 };
 
-// ─── FIT SCORING ──────────────────────────────────────────────
-// Positive signals: company/role has a passion/mission/lifestyle angle
-const FIT_POSITIVE: string[] = [
-  // Outdoor / active
-  "outdoor", "adventure", "trail", "wilderness", "mountain",
-  "cycling", "running", "hiking", "climbing", "fitness", "sport", "athletic",
-  // Mission / purpose
-  "mission-driven", "b corp", "benefit corp", "nonprofit", "non-profit",
-  "climate", "sustainability", "conservation", "social impact", "purpose-driven",
-  // Culture
-  "dog-friendly", "dog friendly", "pets welcome", "community-driven",
-  "passionate", "enthusiast", "maker culture", "small team", "creative",
-  // Known passion-company names (partial)
-  "strava", "alltrails", "komoot", "garmin", "rei ", "patagonia",
-  "arc'teryx", "nikon", "gopro", "spotify", "bandcamp", "soundcloud",
-  "zwift", "peloton", "duolingo", "headspace", "calm", "airbnb", "seatgeek",
-];
-
-// Hard negatives drag the score down
-const FIT_NEGATIVE: string[] = [
-  "government contractor", "federal contract", "dod clearance", "top secret clearance",
-  "investment banking", "hedge fund", "private equity",
-  "management consulting", "big four",
-];
-
-function scoreJobFit(title: string, company: string, description: string): number {
-  const text = `${title} ${company} ${description}`.toLowerCase();
-  let score = 0;
-  for (const kw of FIT_POSITIVE) if (text.includes(kw)) score++;
-  for (const kw of FIT_NEGATIVE) if (text.includes(kw)) score -= 3;
-  return score;
-}
-
-function tagJob(title: string, description: string): string[] {
-  const text = `${title} ${description}`.toLowerCase();
-  const tags: string[] = [];
-  for (const [interest, keywords] of Object.entries(INTEREST_KEYWORDS)) {
-    if (keywords.some((kw) => text.includes(kw))) tags.push(interest);
-  }
-  return tags.slice(0, 5);
-}
-
 // ─── TYPES ────────────────────────────────────────────────────
 interface JSearchJob {
   job_id: string;
@@ -100,6 +94,33 @@ interface JSearchJob {
   job_country?: string;
   job_description: string;
   job_is_remote: boolean;
+}
+
+// ─── TAG JOB against only the provided skills + interests ─────
+function tagJob(
+  title: string,
+  description: string,
+  skills: string[],
+  interests: string[]
+): string[] {
+  const text = `${title} ${description}`.toLowerCase();
+  const tags: string[] = [];
+
+  for (const skill of skills) {
+    const keywords = SKILL_KEYWORDS[skill];
+    if (keywords && keywords.some((kw) => text.includes(kw))) {
+      tags.push(skill);
+    }
+  }
+
+  for (const interest of interests) {
+    const keywords = INTEREST_KEYWORDS[interest];
+    if (keywords && keywords.some((kw) => text.includes(kw))) {
+      tags.push(interest);
+    }
+  }
+
+  return tags;
 }
 
 // ─── HANDLER ──────────────────────────────────────────────────
@@ -121,20 +142,23 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  const { query = "", interests = [] } = (await req.json()) as {
+  const { query = "", skills = [], interests = [] } = (await req.json()) as {
     query: string;
+    skills: string[];
     interests: string[];
   };
 
-  // Build query: role/skill as primary + first 2 interests as context
-  const interestContext = interests.slice(0, 2).join(" ");
-  const fullQuery =
-    [query.trim(), interestContext].filter(Boolean).join(" ") || "software engineer";
+  if (!query.trim()) {
+    return new Response(
+      JSON.stringify({ error: "query is required" }),
+      { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+    );
+  }
 
   const params = new URLSearchParams({
-    query: fullQuery,
+    query: query.trim(),
     page: "1",
-    num_pages: "2",      // ~20 raw results before our filtering
+    num_pages: "2",
     date_posted: "month",
   });
 
@@ -162,16 +186,14 @@ Deno.serve(async (req: Request) => {
   }
 
   const raw: JSearchJob[] = jsearchData.data ?? [];
+  const hasFilters = skills.length > 0 || interests.length > 0;
 
   const jobs = raw
     .map((j) => {
-      const tags = tagJob(j.job_title, j.job_description ?? "");
-      const fitScore = scoreJobFit(j.job_title, j.employer_name, j.job_description ?? "");
+      const tags = tagJob(j.job_title, j.job_description ?? "", skills, interests);
       const location = j.job_is_remote
         ? "Remote"
-        : [j.job_city, j.job_state].filter(Boolean).join(", ") ||
-          j.job_country ||
-          "Unknown";
+        : [j.job_city, j.job_state].filter(Boolean).join(", ") || j.job_country || "Unknown";
       return {
         id: j.job_id,
         title: j.job_title,
@@ -182,15 +204,16 @@ Deno.serve(async (req: Request) => {
         url: j.job_apply_link,
         description: (j.job_description ?? "").slice(0, 500).trim(),
         tags,
-        fitScore,
+        matchCount: tags.length,
         source: "live" as const,
       };
     })
-    .filter((j) => j.fitScore >= 0)          // drop hard-negative results
-    .sort((a, b) => b.fitScore - a.fitScore)  // best fits first
+    // If skills/interests were provided, only keep jobs with ≥1 match
+    .filter((j) => !hasFilters || j.matchCount > 0)
+    .sort((a, b) => b.matchCount - a.matchCount)
     .slice(0, 12);
 
-  return new Response(JSON.stringify({ jobs, query: fullQuery }), {
+  return new Response(JSON.stringify({ jobs, query: query.trim() }), {
     headers: {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
